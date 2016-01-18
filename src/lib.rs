@@ -147,7 +147,6 @@ mod tests {
             let bucket_base_index = (bucket_index + 1) << self.sub_bucket_half_count_magnitude;
             let offset_in_bucket = sub_bucket_index - self.sub_bucket_half_count;
 
-            println!("bucket base index: {}, offset in bucket: {}", bucket_base_index, offset_in_bucket);
 
             bucket_base_index + offset_in_bucket
         }
@@ -166,7 +165,6 @@ mod tests {
         }
 
         fn get_bucket_index(&self, value: i64) -> i32 {
-            println!("leading zero count base: {}, sub bucket mask: {}", self.leading_zero_count_base, self.sub_bucket_mask);
             (self.leading_zero_count_base as i64 - (value | self.sub_bucket_mask as i64).leading_zeros() as i64) as i32
         }
 
@@ -177,20 +175,18 @@ mod tests {
         fn counts_array_index(&self, value: i64) -> i32 {
             let bucket_index = self.get_bucket_index(value);
             let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
-            println!("value: {}, bucket index: {}, sub bucket index: {}", value, bucket_index, sub_bucket_index);
             self.counts_array_index_by_bucket(bucket_index, sub_bucket_index)
         }
 
         fn record_single_value(&mut self, value: i64) {
             let counts_index = self.counts_array_index(value);
             // TODO handle out of bounds exceptions
-            println!("counts_index: {}", counts_index);
             self.increment_count_at_index(counts_index);
             self.update_min_and_max(value);
             self.increment_total_count();
         }
 
-        fn get_count_at_index(&self, index: i32) -> i64 {
+        pub fn get_count_at_index(&self, index: i32) -> i64 {
             self.values[index as usize]
         }
 
@@ -198,7 +194,7 @@ mod tests {
             (sub_bucket_index as i64) << (bucket_index + self.unit_magnitude)
         }
 
-        fn value_from_index(&self, index: i32) -> i64 {
+        pub fn value_from_index(&self, index: i32) -> i64 {
             let mut bucket_index: i32 = (index >> self.sub_bucket_half_count_magnitude) - 1;
             let mut sub_bucket_index: i32 = (index & (self.sub_bucket_half_count - 1)) + self.sub_bucket_half_count;
             if bucket_index < 0 {
@@ -208,7 +204,7 @@ mod tests {
             self.value_from_index_by_bucket(bucket_index, sub_bucket_index)
         }
 
-        fn lowest_equivalent_value(&self, value: i64) -> i64 {
+        pub fn lowest_equivalent_value(&self, value: i64) -> i64 {
             let bucket_index = self.get_bucket_index(value);
             let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
             self.value_from_index_by_bucket(bucket_index, sub_bucket_index)
@@ -225,8 +221,20 @@ mod tests {
             self.lowest_equivalent_value(value) + self.size_of_equivalent_value_range(value)
         }
 
-        fn highest_equivalent_value(&self, value: i64) -> i64 {
+        pub fn highest_equivalent_value(&self, value: i64) -> i64 {
             self.next_non_equivalent_value(value) - 1
+        }
+
+        pub fn record_value_with_expected_interval(&mut self, value: i64, expected_interval_between_value_samples: i64) {
+            if expected_interval_between_value_samples <= 0 {
+                return;
+            }
+
+            let mut missing_value = value - expected_interval_between_value_samples;
+            while missing_value >= expected_interval_between_value_samples {
+                self.record_single_value(missing_value);
+                missing_value -= expected_interval_between_value_samples;
+            }
         }
 
         pub fn record_value(&mut self, value: i64) {
@@ -234,7 +242,7 @@ mod tests {
         }
 
         pub fn get_min_value(&self) -> i64 {
-            0
+            if self.min_non_zero_value == std::i64::MAX { 0 } else { self.min_non_zero_value }
         }
 
         pub fn get_max_value(&self) -> i64 {
@@ -249,8 +257,21 @@ mod tests {
             0.0
         }
 
+        pub fn reset(&mut self) {
+            self.total_count = 0;
+            for i in 0..self.counts_array_length {
+                self.values[i as usize] = 0;
+            }
+            self.max_value = 0;   
+            self.min_non_zero_value = std::i64::MAX;
+        }
+
         pub fn get_percentile_at_or_below_value(&self) -> f64 {
             0.0
+        }
+
+        pub fn get_counts_array_length(&self) -> i32 {
+            self.counts_array_length
         }
 
         pub fn get_value_at_percentile(&self, percentile: f64) -> i64 {
