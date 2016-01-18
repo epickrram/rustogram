@@ -1,0 +1,4 @@
+[package]
+name = "rustogram"
+version = "0.1.0"
+authors = ["pricem <pricem@lmax.com>"]
