@@ -229,7 +229,7 @@ mod tests {
             if expected_interval_between_value_samples <= 0 {
                 return;
             }
-
+            self.record_value(value);
             let mut missing_value = value - expected_interval_between_value_samples;
             while missing_value >= expected_interval_between_value_samples {
                 self.record_single_value(missing_value);

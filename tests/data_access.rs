@@ -2,7 +2,6 @@ extern crate rustogram;
 const HIGHEST_TRACKABLE_VALUE: i64 = 3600 * 1000 * 1000;
 const NUMBER_OF_SIGNIFICANT_VALUE_DIGITS: i32 = 3;   
 
-#[ignore]
 #[test]
 fn test_get_total_count() {
     let histogram = get_histogram();
