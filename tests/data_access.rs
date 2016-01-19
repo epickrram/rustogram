@@ -24,8 +24,8 @@ fn test_get_min_value() {
 
 #[test]
 fn test_get_mean_value() {
-    let histogram = get_histogram();
-    let raw_histogram = get_raw_histogram();
+    let mut histogram = get_histogram();
+    let mut raw_histogram = get_raw_histogram();
 
     let expected_raw_mean = (10_000_000f64 + 100_000_000f64) / 10001f64;
     let expected_mean = (1_000f64 + 50_000_000f64) / 2f64;

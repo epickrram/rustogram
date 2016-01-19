@@ -108,16 +108,16 @@ mod tests {
             }
         }
 
-        pub fn reset(&mut self, histogram: Histogram) {
-            self.reset_iterator(histogram);
+        pub fn reset(&mut self, total_count: i64, unit_magnitude: i32) {
+            self.reset_iterator(total_count, unit_magnitude);
         }
 
-        fn reset_iterator(&mut self, _histogram: Histogram) {
-            self.saved_histogram_total_raw_count = _histogram.get_total_count();
-            self.array_total_count = _histogram.get_total_count();
+        fn reset_iterator(&mut self, total_count: i64, unit_magnitude: i32) {
+            self.saved_histogram_total_raw_count = total_count;
+            self.array_total_count = total_count;
             self.current_index = 0;
             self.current_value_at_index = 0;
-            self.next_value_at_index = 1 << _histogram.unit_magnitude;
+            self.next_value_at_index = 1 << unit_magnitude;
             self.prev_value_iterated_to = 0;
             self.total_count_to_prev_index = 0;
             self.total_count_to_current_index = 0;
@@ -349,11 +349,11 @@ mod tests {
             self.max_value
         }
 
-        pub fn get_mean(&self) -> f64 {
+        pub fn get_mean(&mut self) -> f64 {
             if self.total_count == 0 {
                 return 0f64;
             }
-
+            self.recorded_values_iterator.reset(self.total_count, self.unit_magnitude);
             0.0
         }
 

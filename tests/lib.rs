@@ -5,7 +5,7 @@ const TEST_VALUE_LEVEL: i64 = 4;
 
 #[test]
 fn test_empty_histogram() {
-    let histogram = rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+    let mut histogram = rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     assert_eq!(0, histogram.get_min_value());
     assert_eq!(0, histogram.get_max_value());
