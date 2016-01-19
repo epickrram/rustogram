@@ -37,6 +37,65 @@ mod tests {
         b
     }
 
+    pub struct HistogramIterationValue {
+        value_iterated_to: i64,
+        value_iterated_from: i64,
+        count_at_value_iterated_to: i64,
+        count_added_in_this_iteration_step: i64,
+        total_count_to_this_value: i64,
+        total_value_to_this_value: i64,
+        percentile: f64,
+        percentile_level_iterated_to: f64
+    }
+
+    pub struct RecordedValuesIterator {
+        histogram: Histogram,
+        saved_histogram_total_raw_count: i64,
+        current_index: i32,
+        current_value_at_index: i64,
+        next_value_at_index: i64,
+        prev_value_iterated_to: i64,
+        total_count_to_prev_index: i64,
+        total_count_to_current_index: i64,
+        total_value_to_current_index: i64,
+        array_total_count: i64,
+        count_at_this_value: i64,
+        fresh_sub_bucket: bool,
+        current_iteration_value: HistogramIterationValue
+    }
+
+    impl RecordedValuesIterator {
+        fn new(_histogram: Histogram) -> RecordedValuesIterator {
+            RecordedValuesIterator {
+                histogram: _histogram
+            }
+        }
+
+        pub fn reset_iterator(&mut self, _histogram: Histogram) {
+            self.histogram = _histogram;
+            self.saved_histogram_total_raw_count = _histogram.get_total_count();
+            self.array_total_count = _histogram.get_total_count();
+            self.current_index = 0;
+            self.current_value_at_index = 0;
+            self.next_value_at_index = 1 << _histogram.unit_magnitude;
+            self.prev_value_iterated_to = 0;
+            self.total_count_to_prev_index = 0;
+            self.total_count_to_current_index = 0;
+            self.total_value_to_current_index = 0;
+            self.count_at_this_value = 0;
+            self.fresh_sub_bucket = true;
+            self.current_iteration_value.reset();
+        }
+    }
+
+    impl Iterator for RecordedValuesIterator {
+        type Item = HistogramIterationValue;
+
+        fn next(&mut self) -> Option<HistogramIterationValue> {
+            None
+        }
+    }
+
 
     #[derive(Debug)]
     pub struct Histogram {
@@ -250,6 +309,9 @@ mod tests {
         }
 
         pub fn get_mean(&self) -> f64 {
+            if self.total_count == 0 {
+                return 0f64;
+            }
             0.0
         }
 
