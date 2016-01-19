@@ -22,6 +22,7 @@ mod tests {
 */
 //pub mod rustogram {
     use std::fmt;
+    use std::ptr;
 
     fn min_f64(a: f64, b: f64) -> f64 {
         if a < b {
@@ -48,8 +49,34 @@ mod tests {
         percentile_level_iterated_to: f64
     }
 
-    pub struct RecordedValuesIterator {
-        histogram: Histogram,
+    impl HistogramIterationValue {
+        fn new() -> HistogramIterationValue {
+            HistogramIterationValue {
+                value_iterated_to: 0,
+                value_iterated_from: 0,
+                count_at_value_iterated_to: 0,
+                count_added_in_this_iteration_step: 0,
+                total_count_to_this_value: 0,
+                total_value_to_this_value: 0,
+                percentile: 0.0,
+                percentile_level_iterated_to: 0.0
+            }
+        }
+
+        pub fn reset(&mut self) {
+            self.value_iterated_to = 0;
+            self.value_iterated_from = 0;
+            self.count_at_value_iterated_to = 0;
+            self.count_added_in_this_iteration_step = 0;
+            self.total_count_to_this_value = 0;
+            self.total_value_to_this_value = 0;
+            self.percentile = 0.0;
+            self.percentile_level_iterated_to = 0.0;
+        }
+    }
+
+    pub struct RecordedValuesIterator<'a> {
+        histogram: &'a Histogram,
         saved_histogram_total_raw_count: i64,
         current_index: i32,
         current_value_at_index: i64,
@@ -64,14 +91,30 @@ mod tests {
         current_iteration_value: HistogramIterationValue
     }
 
-    impl RecordedValuesIterator {
-        fn new(_histogram: Histogram) -> RecordedValuesIterator {
+    impl<'a> RecordedValuesIterator<'a> {
+        fn new(_histogram: &'a Histogram) -> RecordedValuesIterator {
             RecordedValuesIterator {
-                histogram: _histogram
+                histogram: _histogram,
+                saved_histogram_total_raw_count: 0,
+                current_index: 0,
+                current_value_at_index: 0,
+                next_value_at_index: 0,
+                prev_value_iterated_to: 0,
+                total_count_to_prev_index: 0,
+                total_count_to_current_index: 0,
+                total_value_to_current_index: 0,
+                array_total_count: 0,
+                count_at_this_value: 0,
+                fresh_sub_bucket: true,
+                current_iteration_value: HistogramIterationValue::new()
             }
         }
 
-        pub fn reset_iterator(&mut self, _histogram: Histogram) {
+        pub fn reset(&mut self) {
+            self.reset_iterator(self.histogram);
+        }
+
+        fn reset_iterator(&mut self, _histogram: &'a Histogram) {
             self.histogram = _histogram;
             self.saved_histogram_total_raw_count = _histogram.get_total_count();
             self.array_total_count = _histogram.get_total_count();
@@ -88,7 +131,7 @@ mod tests {
         }
     }
 
-    impl Iterator for RecordedValuesIterator {
+    impl<'a> Iterator for RecordedValuesIterator<'a> {
         type Item = HistogramIterationValue;
 
         fn next(&mut self) -> Option<HistogramIterationValue> {
@@ -99,7 +142,7 @@ mod tests {
 
     #[derive(Debug)]
     pub struct Histogram {
-        values: Vec<i64>,
+        values: Box<[i64]>,
         total_count: i64,
         highest_trackable_value: i64,
         lowest_discernible_value: i64,
@@ -172,7 +215,7 @@ mod tests {
 
 
             let h = Histogram {
-                values: vec![0; _counts_array_length as usize],
+                values: vec![0; _counts_array_length as usize].into_boxed_slice(),
                 total_count: 0,
                 highest_trackable_value: _highest_trackable_value,
                 lowest_discernible_value: _lowest_discernible_value,
@@ -312,6 +355,7 @@ mod tests {
             if self.total_count == 0 {
                 return 0f64;
             }
+
             0.0
         }
 
