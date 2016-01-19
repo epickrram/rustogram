@@ -137,7 +137,6 @@ mod tests {
     }
 
 
-    #[derive(Debug)]
     pub struct Histogram {
         values: Box<[i64]>,
         total_count: i64,
@@ -154,7 +153,8 @@ mod tests {
         leading_zero_count_base: i32,
         sub_bucket_mask: i64,
         max_value: i64,
-        min_non_zero_value: i64
+        min_non_zero_value: i64,
+        recorded_values_iterator: Box<RecordedValuesIterator>
     }
 
     fn determine_array_length_needed(highest_trackable_value: i64, sub_bucket_count: i32, unit_magnitude: i32) -> i32 {
@@ -227,7 +227,8 @@ mod tests {
                 leading_zero_count_base: _leading_zero_count_base,
                 sub_bucket_mask: _sub_bucket_mask,
                 max_value: 0,
-                min_non_zero_value: std::i64::MAX
+                min_non_zero_value: std::i64::MAX,
+                recorded_values_iterator: Box::new(RecordedValuesIterator::new())
             };
 
             h.init();
