@@ -75,8 +75,7 @@ mod tests {
         }
     }
 
-    pub struct RecordedValuesIterator<'a> {
-        histogram: &'a Histogram,
+    pub struct RecordedValuesIterator {
         saved_histogram_total_raw_count: i64,
         current_index: i32,
         current_value_at_index: i64,
@@ -91,10 +90,9 @@ mod tests {
         current_iteration_value: HistogramIterationValue
     }
 
-    impl<'a> RecordedValuesIterator<'a> {
-        fn new(_histogram: &'a Histogram) -> RecordedValuesIterator {
+    impl RecordedValuesIterator {
+        fn new() -> RecordedValuesIterator {
             RecordedValuesIterator {
-                histogram: _histogram,
                 saved_histogram_total_raw_count: 0,
                 current_index: 0,
                 current_value_at_index: 0,
@@ -110,12 +108,11 @@ mod tests {
             }
         }
 
-        pub fn reset(&mut self) {
-            self.reset_iterator(self.histogram);
+        pub fn reset(&mut self, histogram: Histogram) {
+            self.reset_iterator(histogram);
         }
 
-        fn reset_iterator(&mut self, _histogram: &'a Histogram) {
-            self.histogram = _histogram;
+        fn reset_iterator(&mut self, _histogram: Histogram) {
             self.saved_histogram_total_raw_count = _histogram.get_total_count();
             self.array_total_count = _histogram.get_total_count();
             self.current_index = 0;
@@ -131,7 +128,7 @@ mod tests {
         }
     }
 
-    impl<'a> Iterator for RecordedValuesIterator<'a> {
+    impl Iterator for RecordedValuesIterator {
         type Item = HistogramIterationValue;
 
         fn next(&mut self) -> Option<HistogramIterationValue> {
