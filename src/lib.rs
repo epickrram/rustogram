@@ -63,6 +63,25 @@ mod tests {
             }
         }
 
+        pub fn set(&mut self, 
+                   _value_iterated_to: i64,
+                   _value_iterated_from: i64,
+                   _count_at_value_iterated_to: i64,
+                   _count_added_in_this_iteration_step: i64,
+                   _total_count_to_this_value: i64,
+                   _total_value_to_this_value: i64,
+                   _percentile: f64,
+                   _percentile_level_iterated_to: f64) {
+            self.value_iterated_to = _value_iterated_to;
+            self.value_iterated_from = _value_iterated_from;
+            self.count_at_value_iterated_to = _count_at_value_iterated_to;
+            self.count_added_in_this_iteration_step = _count_added_in_this_iteration_step;
+            self.total_count_to_this_value = _total_count_to_this_value;
+            self.total_value_to_this_value = _total_value_to_this_value;
+            self.percentile = _percentile;
+            self.percentile_level_iterated_to = _percentile_level_iterated_to;
+        }
+
         pub fn reset(&mut self) {
             self.value_iterated_to = 0;
             self.value_iterated_from = 0;
@@ -83,7 +102,18 @@ mod tests {
         }
     }
 
-    pub struct RecordedValuesIterator {
+    pub struct Tester<'a> {
+        histogram: &'a Histogram
+    }
+
+    impl<'a> Tester<'a> {
+        pub fn how_many(&self) -> i64 {
+            self.histogram.get_total_count()
+        }
+    }
+
+    pub struct RecordedValuesIterator<'a> {
+        histogram: &'a Histogram,
         saved_histogram_total_raw_count: i64,
         current_index: i32,
         current_value_at_index: i64,
@@ -95,29 +125,71 @@ mod tests {
         array_total_count: i64,
         count_at_this_value: i64,
         fresh_sub_bucket: bool,
+        visited_index: i32,
         current_iteration_value: HistogramIterationValue
     }
 
-    impl RecordedValuesIterator {
-        fn new() -> RecordedValuesIterator {
-            RecordedValuesIterator {
-                saved_histogram_total_raw_count: 0,
-                current_index: 0,
-                current_value_at_index: 0,
-                next_value_at_index: 0,
-                prev_value_iterated_to: 0,
-                total_count_to_prev_index: 0,
-                total_count_to_current_index: 0,
-                total_value_to_current_index: 0,
-                array_total_count: 0,
-                count_at_this_value: 0,
-                fresh_sub_bucket: true,
-                current_iteration_value: HistogramIterationValue::new()
-            }
-        }
-
+    impl<'a> RecordedValuesIterator<'a> {
         pub fn reset(&mut self, total_count: i64, unit_magnitude: i32) {
             self.reset_iterator(total_count, unit_magnitude);
+        }
+
+        pub fn has_next(&mut self) -> bool {
+            self.total_count_to_current_index < self.array_total_count
+        }
+
+        pub fn next(&mut self) -> &HistogramIterationValue {
+            while !self.exhausted_sub_buckets() {
+                self.count_at_this_value = self.histogram.get_count_at_index(self.current_index);
+                if self.fresh_sub_bucket {
+                    self.total_count_to_current_index += self.count_at_this_value;
+                    self.total_value_to_current_index += self.count_at_this_value * self.histogram.highest_equivalent_value(self.current_value_at_index);
+                    self.fresh_sub_bucket = false;
+                }
+
+                if self.reached_iteration_level() {
+                    let value_iterated_to = self.get_value_iterated_to();
+                    let percentile_iterated_to = self.get_percentile_iterated_to();
+                    self.current_iteration_value.set(value_iterated_to, self.prev_value_iterated_to, self.count_at_this_value, 
+                                                     (self.total_count_to_current_index - self.total_count_to_prev_index), self.total_count_to_current_index,
+                                                     self.total_value_to_current_index, ((100.0f64 * self.total_count_to_current_index as f64) / (self.array_total_count as f64)),
+                                                     percentile_iterated_to);
+                    self.prev_value_iterated_to = value_iterated_to;
+                    self.total_count_to_prev_index = self.total_count_to_current_index;
+                    self.increment_iteration_level();
+                }
+
+                self.increment_sub_bucket();
+            }
+            &self.current_iteration_value
+        }
+
+        fn increment_sub_bucket(&mut self) {
+            self.fresh_sub_bucket = true;
+            self.current_index += 1;
+            self.current_value_at_index = self.histogram.value_from_index(self.current_index);
+            self.next_value_at_index = self.histogram.value_from_index(self.current_index + 1);
+        }
+
+        fn increment_iteration_level(&mut self) {
+            self.visited_index = self.current_index;
+        }
+
+        fn get_value_iterated_to(&mut self) -> i64 {
+            self.histogram.highest_equivalent_value(self.current_value_at_index)
+        }
+
+        fn get_percentile_iterated_to(&mut self) -> f64 {
+            (100.0f64 * self.total_count_to_prev_index as f64) / self.array_total_count as f64
+        }
+
+        fn reached_iteration_level(&mut self) -> bool {
+            let current_count = self.histogram.get_count_at_index(self.current_index);
+            (current_count != 0) && (self.visited_index != self.current_index)
+        }
+        
+        fn exhausted_sub_buckets(&mut self) -> bool {
+            self.current_index >= self.histogram.counts_array_length
         }
 
         fn reset_iterator(&mut self, total_count: i64, unit_magnitude: i32) {
@@ -132,10 +204,11 @@ mod tests {
             self.total_value_to_current_index = 0;
             self.count_at_this_value = 0;
             self.fresh_sub_bucket = true;
+            self.visited_index = -1;
             self.current_iteration_value.reset();
         }
     }
-
+/*
     impl Iterator for RecordedValuesIterator {
         type Item = HistogramIterationValue;
 
@@ -143,7 +216,7 @@ mod tests {
             None
         }
     }
-
+*/
 
     pub struct Histogram {
         values: Box<[i64]>,
@@ -161,8 +234,7 @@ mod tests {
         leading_zero_count_base: i32,
         sub_bucket_mask: i64,
         max_value: i64,
-        min_non_zero_value: i64,
-        recorded_values_iterator: Box<RecordedValuesIterator>
+        min_non_zero_value: i64
     }
 
     fn determine_array_length_needed(highest_trackable_value: i64, sub_bucket_count: i32, unit_magnitude: i32) -> i32 {
@@ -235,8 +307,7 @@ mod tests {
                 leading_zero_count_base: _leading_zero_count_base,
                 sub_bucket_mask: _sub_bucket_mask,
                 max_value: 0,
-                min_non_zero_value: std::i64::MAX,
-                recorded_values_iterator: Box::new(RecordedValuesIterator::new())
+                min_non_zero_value: std::i64::MAX
             };
 
             h.init();
@@ -357,21 +428,41 @@ mod tests {
             self.max_value
         }
 
-        pub fn get_mean(&mut self) -> f64 {
+        pub fn get_mean(&self) -> f64 {
             if self.total_count == 0 {
                 return 0f64;
             }
-            self.recorded_values_iterator.reset(self.total_count, self.unit_magnitude);
+            let mut iter = RecordedValuesIterator {
+                histogram: self,
+                saved_histogram_total_raw_count: 0,
+                current_index: 0,
+                current_value_at_index: 0,
+                next_value_at_index: 0,
+                prev_value_iterated_to: 0,
+                total_count_to_prev_index: 0,
+                total_count_to_current_index: 0,
+                total_value_to_current_index: 0,
+                array_total_count: 0,
+                count_at_this_value: 0,
+                fresh_sub_bucket: true,
+                visited_index: -1,
+                current_iteration_value: HistogramIterationValue::new()
+            };
+
+
+            iter.reset(self.total_count, self.unit_magnitude);
             let mut total_value = 0.0f64;
-            for iteration_value in self.recorded_values_iterator {
-                total_value += self.median_equivalent_value(iteration_value.get_value_iterated_to() * iteration_value.get_count_at_value_iterated_to());
+
+            while iter.has_next() {
+                let iteration_value = iter.next();
+                total_value += self.median_equivalent_value(iteration_value.get_value_iterated_to() * iteration_value.get_count_at_value_iterated_to()) as f64;
             }
             
             return total_value * self.total_count as f64;
         }
 
-        fn median_equivalent_value(&mut self, value: i64) -> f64 {
-            0.0
+        fn median_equivalent_value(&self, value: i64) -> i64 {
+            self.lowest_equivalent_value(value) + (self.size_of_equivalent_value_range(value) >> 1)
         }
 
         pub fn get_std_deviation(&self) -> f64 {
