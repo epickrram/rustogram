@@ -73,6 +73,14 @@ mod tests {
             self.percentile = 0.0;
             self.percentile_level_iterated_to = 0.0;
         }
+
+        pub fn get_value_iterated_to(&self) -> i64 {
+            self.value_iterated_to
+        }
+
+        pub fn get_count_at_value_iterated_to(&self) -> i64 {
+            self.count_at_value_iterated_to
+        }
     }
 
     pub struct RecordedValuesIterator {
@@ -354,6 +362,15 @@ mod tests {
                 return 0f64;
             }
             self.recorded_values_iterator.reset(self.total_count, self.unit_magnitude);
+            let mut total_value = 0.0f64;
+            for iteration_value in self.recorded_values_iterator {
+                total_value += self.median_equivalent_value(iteration_value.get_value_iterated_to() * iteration_value.get_count_at_value_iterated_to());
+            }
+            
+            return total_value * self.total_count as f64;
+        }
+
+        fn median_equivalent_value(&mut self, value: i64) -> f64 {
             0.0
         }
 
