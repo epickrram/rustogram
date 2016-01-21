@@ -102,16 +102,42 @@ mod tests {
         }
     }
 
-    pub struct Tester<'a> {
-        histogram: &'a Histogram
-    }
+    impl fmt::Display for HistogramIterationValue {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            try!(write!(f, "Value["));
+            try!(write!(f, "value_iterated_to: {}, ", self.value_iterated_to));
+            try!(write!(f, "value_iterated_from: {}, ", self.value_iterated_from));
+            try!(write!(f, "count_at_value_iterated_to: {}, ", self.count_at_value_iterated_to));
+            try!(write!(f, "count_added_in_this_iteration_step: {}, ", self.count_added_in_this_iteration_step));
+            try!(write!(f, "total_count_to_this_value: {}, ", self.total_count_to_this_value));
+            try!(write!(f, "total_value_to_this_value: {}, ", self.total_value_to_this_value));
+            try!(write!(f, "percentile: {}, ", self.percentile));
+            try!(write!(f, "percentile_level_iterated_to: {}, ", self.percentile_level_iterated_to));
 
-    impl<'a> Tester<'a> {
-        pub fn how_many(&self) -> i64 {
-            self.histogram.get_total_count()
+            write!(f, "]")
         }
     }
 
+    impl<'a> fmt::Display for RecordedValuesIterator<'a> {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            try!(write!(f, "Iterator["));
+            try!(write!(f, "saved_count: {}, ", self.saved_histogram_total_raw_count));
+            try!(write!(f, "current_index: {}, ", self.current_index));
+            try!(write!(f, "current_value_at_index: {}, ", self.current_value_at_index));
+            try!(write!(f, "next_value_at_index: {}, ", self.next_value_at_index));
+            try!(write!(f, "prev_value_iterated_to: {}, ", self.prev_value_iterated_to));
+            try!(write!(f, "total_count_to_prev_index: {}, ", self.total_count_to_prev_index));
+            try!(write!(f, "total_count_to_current_index: {}, ", self.total_count_to_current_index));
+            try!(write!(f, "total_value_to_current_index: {}, ", self.total_value_to_current_index));
+            try!(write!(f, "array_total_count: {}, ", self.array_total_count));
+            try!(write!(f, "count_at_this_value: {}, ", self.count_at_this_value));
+            try!(write!(f, "fresh_sub_bucket: {}, ", self.fresh_sub_bucket));
+            try!(write!(f, "visited_index: {}, ", self.visited_index));
+
+            write!(f, "]")
+        }
+    }
+    
     pub struct RecordedValuesIterator<'a> {
         histogram: &'a Histogram,
         saved_histogram_total_raw_count: i64,
@@ -139,6 +165,7 @@ mod tests {
         }
 
         pub fn next(&mut self) -> &HistogramIterationValue {
+            println!("\n\nstart of next: {}\n\n", self);
             while !self.exhausted_sub_buckets() {
                 self.count_at_this_value = self.histogram.get_count_at_index(self.current_index);
                 if self.fresh_sub_bucket {
@@ -157,11 +184,14 @@ mod tests {
                     self.prev_value_iterated_to = value_iterated_to;
                     self.total_count_to_prev_index = self.total_count_to_current_index;
                     self.increment_iteration_level();
+
+                    println!("before return: {}", self);
+                    return &self.current_iteration_value;
                 }
 
                 self.increment_sub_bucket();
             }
-            &self.current_iteration_value
+            panic!("Histogram may have overflowed!")
         }
 
         fn increment_sub_bucket(&mut self) {
@@ -455,10 +485,13 @@ mod tests {
 
             while iter.has_next() {
                 let iteration_value = iter.next();
-                total_value += self.median_equivalent_value(iteration_value.get_value_iterated_to() * iteration_value.get_count_at_value_iterated_to()) as f64;
+                println!("{}", iteration_value);
+                total_value += (self.median_equivalent_value(iteration_value.get_value_iterated_to()) * iteration_value.get_count_at_value_iterated_to()) as f64;
+                println!("total_value: {}", total_value);
             }
             
-            return total_value * self.total_count as f64;
+            println!("total_value: {}, total_count: {}", total_value, self.total_count);
+            return total_value / self.total_count as f64;
         }
 
         fn median_equivalent_value(&self, value: i64) -> i64 {

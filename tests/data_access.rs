@@ -30,8 +30,8 @@ fn test_get_mean_value() {
     let expected_raw_mean = (10_000_000f64 + 100_000_000f64) / 10001f64;
     let expected_mean = (1_000f64 + 50_000_000f64) / 2f64;
 
-    assert_eq!(expected_raw_mean, raw_histogram.get_mean());
-    assert_eq!(expected_mean, histogram.get_mean());
+    assert_float_eq(expected_raw_mean, raw_histogram.get_mean(), expected_raw_mean * 0.001);
+    assert_float_eq(expected_mean, histogram.get_mean(), expected_mean * 0.001);
 }
 
 #[test]
@@ -40,6 +40,11 @@ fn test_get_value_at_percentile() {
     let raw_histogram = get_raw_histogram();
 
     assert_eq!(1_000, raw_histogram.get_value_at_percentile(30f64));
+}
+
+fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
+    // TODO improve error message
+    assert!(actual > expected - delta && actual < expected + delta);
 }
 
 fn get_histogram() -> rustogram::Histogram {
