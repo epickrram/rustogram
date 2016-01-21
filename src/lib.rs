@@ -100,6 +100,10 @@ mod tests {
         pub fn get_count_at_value_iterated_to(&self) -> i64 {
             self.count_at_value_iterated_to
         }
+
+        pub fn get_count_added_in_this_iteration_step(&self) -> i64 {
+            self.count_added_in_this_iteration_step
+        }
     }
 
     impl fmt::Display for HistogramIterationValue {
@@ -485,21 +489,49 @@ mod tests {
 
             while iter.has_next() {
                 let iteration_value = iter.next();
-                println!("{}", iteration_value);
                 total_value += (self.median_equivalent_value(iteration_value.get_value_iterated_to()) * iteration_value.get_count_at_value_iterated_to()) as f64;
-                println!("total_value: {}", total_value);
             }
             
-            println!("total_value: {}, total_count: {}", total_value, self.total_count);
             return total_value / self.total_count as f64;
+        }
+
+        pub fn get_std_deviation(&self) -> f64 {
+            if self.total_count == 0 {
+                return 0f64;
+            }
+
+            let mean = self.get_mean();
+            let mut geometric_deviation_total = 0f64;
+
+            let mut iter = RecordedValuesIterator {
+                histogram: self,
+                saved_histogram_total_raw_count: 0,
+                current_index: 0,
+                current_value_at_index: 0,
+                next_value_at_index: 0,
+                prev_value_iterated_to: 0,
+                total_count_to_prev_index: 0,
+                total_count_to_current_index: 0,
+                total_value_to_current_index: 0,
+                array_total_count: 0,
+                count_at_this_value: 0,
+                fresh_sub_bucket: true,
+                visited_index: -1,
+                current_iteration_value: HistogramIterationValue::new()
+            };
+
+            iter.reset(self.total_count, self.unit_magnitude);
+            while iter.has_next() {
+                let iteration_value = iter.next();
+                let deviation = self.median_equivalent_value(iteration_value.get_value_iterated_to()) as f64 - mean;
+                geometric_deviation_total += (deviation * deviation) * iteration_value.get_count_added_in_this_iteration_step() as f64;
+            }
+           
+            (geometric_deviation_total / self.total_count as f64).sqrt()
         }
 
         fn median_equivalent_value(&self, value: i64) -> i64 {
             self.lowest_equivalent_value(value) + (self.size_of_equivalent_value_range(value) >> 1)
-        }
-
-        pub fn get_std_deviation(&self) -> f64 {
-            0.0
         }
 
         pub fn reset(&mut self) {

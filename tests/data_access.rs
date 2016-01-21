@@ -42,7 +42,6 @@ fn test_get_value_at_percentile() {
     assert_eq!(1_000, raw_histogram.get_value_at_percentile(30f64));
 }
 
-#[ignore]
 #[test]
 fn test_get_std_deviation() {
     let histogram = get_histogram();
