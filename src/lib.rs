@@ -159,6 +159,27 @@ mod tests {
         current_iteration_value: HistogramIterationValue
     }
 
+    fn new_iterator<'a>(_histogram: &'a Histogram) -> RecordedValuesIterator {
+            RecordedValuesIterator {
+                histogram: _histogram,
+                saved_histogram_total_raw_count: 0,
+                current_index: 0,
+                current_value_at_index: 0,
+                next_value_at_index: 0,
+                prev_value_iterated_to: 0,
+                total_count_to_prev_index: 0,
+                total_count_to_current_index: 0,
+                total_value_to_current_index: 0,
+                array_total_count: 0,
+                count_at_this_value: 0,
+                fresh_sub_bucket: true,
+                visited_index: -1,
+                current_iteration_value: HistogramIterationValue::new()
+            }
+
+
+    }
+
     impl<'a> RecordedValuesIterator<'a> {
         pub fn reset(&mut self, total_count: i64, unit_magnitude: i32) {
             self.reset_iterator(total_count, unit_magnitude);
@@ -466,23 +487,8 @@ mod tests {
             if self.total_count == 0 {
                 return 0f64;
             }
-            let mut iter = RecordedValuesIterator {
-                histogram: self,
-                saved_histogram_total_raw_count: 0,
-                current_index: 0,
-                current_value_at_index: 0,
-                next_value_at_index: 0,
-                prev_value_iterated_to: 0,
-                total_count_to_prev_index: 0,
-                total_count_to_current_index: 0,
-                total_value_to_current_index: 0,
-                array_total_count: 0,
-                count_at_this_value: 0,
-                fresh_sub_bucket: true,
-                visited_index: -1,
-                current_iteration_value: HistogramIterationValue::new()
-            };
 
+            let mut iter = new_iterator(self);
 
             iter.reset(self.total_count, self.unit_magnitude);
             let mut total_value = 0.0f64;
@@ -503,22 +509,7 @@ mod tests {
             let mean = self.get_mean();
             let mut geometric_deviation_total = 0f64;
 
-            let mut iter = RecordedValuesIterator {
-                histogram: self,
-                saved_histogram_total_raw_count: 0,
-                current_index: 0,
-                current_value_at_index: 0,
-                next_value_at_index: 0,
-                prev_value_iterated_to: 0,
-                total_count_to_prev_index: 0,
-                total_count_to_current_index: 0,
-                total_value_to_current_index: 0,
-                array_total_count: 0,
-                count_at_this_value: 0,
-                fresh_sub_bucket: true,
-                visited_index: -1,
-                current_iteration_value: HistogramIterationValue::new()
-            };
+            let mut iter = new_iterator(self);
 
             iter.reset(self.total_count, self.unit_magnitude);
             while iter.has_next() {
