@@ -210,7 +210,7 @@ mod tests {
         }
 
         fn get_percentile_iterated_to(&mut self) -> f64 {
-            (100.0f64 * self.total_count_to_prev_index as f64) / self.array_total_count as f64
+            (100.0f64 * self.total_count_to_current_index as f64) / self.array_total_count as f64
         }
 
         fn reached_iteration_level(&mut self) -> bool {
