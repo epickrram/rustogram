@@ -521,6 +521,26 @@ mod tests {
             (geometric_deviation_total / self.total_count as f64).sqrt()
         }
 
+        pub fn get_percentile_at_or_below_value(&self, value: i64) -> f64 {
+            if self.total_count == 0 {
+                return 100f64;
+            }
+            let counts_array_index = self.counts_array_index(value);
+            let target_index = if counts_array_index < (self.counts_array_length - 1) { 
+                counts_array_index 
+            } else { 
+                self.counts_array_length -1
+            };
+
+            let mut total_to_current_index = 0i64;
+
+            for i in 0..(target_index + 1) {
+                total_to_current_index += self.get_count_at_index(i);
+            }
+
+            (100 * total_to_current_index) as f64 / self.total_count as f64
+        }
+
         fn median_equivalent_value(&self, value: i64) -> i64 {
             self.lowest_equivalent_value(value) + (self.size_of_equivalent_value_range(value) >> 1)
         }
@@ -532,10 +552,6 @@ mod tests {
             }
             self.max_value = 0;   
             self.min_non_zero_value = std::i64::MAX;
-        }
-
-        pub fn get_percentile_at_or_below_value(&self) -> f64 {
-            0.0
         }
 
         pub fn get_counts_array_length(&self) -> i32 {

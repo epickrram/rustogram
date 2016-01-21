@@ -76,6 +76,25 @@ fn test_get_value_at_percentile() {
     
 }
 
+#[test]
+fn test_get_value_at_percentile_for_large_histogram() {
+    let largest_value = 1000000000000;
+    let mut histogram = rustogram::new_histogram(largest_value, 5);
+    histogram.record_value(largest_value);
+
+    assert!(histogram.get_value_at_percentile(100.0) > 0);
+}
+
+#[test]
+fn test_get_percentile_at_or_below_value() {
+    let histogram = get_histogram();
+    let raw_histogram = get_raw_histogram();
+
+    assert_float_eq(99.99, raw_histogram.get_percentile_at_or_below_value(5000), 0.0001);
+    assert_float_eq(50.0, histogram.get_percentile_at_or_below_value(5000), 0.0001);
+    assert_float_eq(100.0, histogram.get_percentile_at_or_below_value(100000000), 0.0001);
+}
+
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
     if !(actual > expected - delta && actual < expected + delta) {
         panic!(format!("Expected {} to be equal to {} +/-{}", actual, expected, delta));

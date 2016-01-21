@@ -11,7 +11,7 @@ fn test_empty_histogram() {
     assert_eq!(0, histogram.get_max_value());
     assert_eq!(0.0, histogram.get_mean());
     assert_eq!(0.0, histogram.get_std_deviation());
-    assert_eq!(0.0, histogram.get_percentile_at_or_below_value());
+    assert_eq!(100.0, histogram.get_percentile_at_or_below_value(0));
 }
 
 #[test]
@@ -79,11 +79,6 @@ fn test_get_max_value() {
     histogram.record_value(1_000_000);
 
     assert_eq!(1_000_000, histogram.get_max_value());
-}
-
-#[test]
-fn test_get_mean() {
-
 }
 
 fn verify_max_value(histogram: rustogram::Histogram) {
