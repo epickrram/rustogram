@@ -35,14 +35,6 @@ fn test_get_mean_value() {
 }
 
 #[test]
-fn test_get_value_at_percentile() {
-    let histogram = get_histogram();
-    let raw_histogram = get_raw_histogram();
-
-    assert_eq!(1_000, raw_histogram.get_value_at_percentile(30f64));
-}
-
-#[test]
 fn test_get_std_deviation() {
     let histogram = get_histogram();
     let raw_histogram = get_raw_histogram();
@@ -63,9 +55,31 @@ fn test_get_std_deviation() {
     assert_float_eq(expected_std_dev, histogram.get_std_deviation(), expected_std_dev * 0.001);
 }
 
+#[test]
+fn test_get_value_at_percentile() {
+    let histogram = get_histogram();
+    let raw_histogram = get_raw_histogram();
+
+    assert_float_eq(1000.0, raw_histogram.get_value_at_percentile(30.0) as f64, 1000.0 * 0.001);
+    assert_float_eq(1000.0, raw_histogram.get_value_at_percentile(99.0) as f64, 1000.0 * 0.001);
+    assert_float_eq(1000.0, raw_histogram.get_value_at_percentile(99.99) as f64, 1000.0 * 0.001);
+    assert_float_eq(100000000.0, raw_histogram.get_value_at_percentile(99.999) as f64, 100000000.0 * 0.001);
+    assert_float_eq(100000000.0, raw_histogram.get_value_at_percentile(100.0) as f64, 100000000.0 * 0.001);
+
+    assert_float_eq(1000.0, histogram.get_value_at_percentile(30.0) as f64, 1000.0 * 0.001);
+    assert_float_eq(1000.0, histogram.get_value_at_percentile(50.0) as f64, 1000.0 * 0.001);
+    assert_float_eq(50000000.0, histogram.get_value_at_percentile(75.0) as f64, 50000000.0 * 0.001);
+    assert_float_eq(80000000.0, histogram.get_value_at_percentile(90.0) as f64, 80000000.0 * 0.001);
+    assert_float_eq(98000000.0, histogram.get_value_at_percentile(99.0) as f64, 98000000.0 * 0.001);
+    assert_float_eq(100000000.0, histogram.get_value_at_percentile(99.999) as f64, 100000000.0 * 0.001);
+    assert_float_eq(100000000.0, histogram.get_value_at_percentile(100.0) as f64, 100000000.0 * 0.001);
+    
+}
+
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
-    // TODO improve error message
-    assert!(actual > expected - delta && actual < expected + delta);
+    if !(actual > expected - delta && actual < expected + delta) {
+        panic!(format!("Expected {} to be equal to {} +/-{}", actual, expected, delta));
+    }
 }
 
 fn get_histogram() -> rustogram::Histogram {
