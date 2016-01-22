@@ -5,7 +5,7 @@
 *.dll
 
 *.rs~
-
+.project
 # Executables
 *.exe
 

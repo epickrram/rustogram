@@ -1,26 +1,4 @@
-
-/* 
-fn main() {
-    let mut histogram = Histogram::new(147, 39);
-    histogram.record_value(37);
-    println!("histogram: {:?}", histogram);
-}
-*/
-/*
-#[cfg(test)]
-mod tests {
-    use rustogram::*;
-
-    #[test]
-    fn test_empty_histogram() {
-        let mut histogram = Histogram::new(47, 37);
-        histogram.record_value(11);
-
-        assert_eq!(11, histogram.get_min_value());
-    }
-}
-*/
-//pub mod rustogram {
+//mod rustogram {
     use std::fmt;
     use std::ptr;
 
@@ -329,6 +307,7 @@ mod tests {
         let mut buckets_needed: i32 = 1;
         println!("smallest untrackable value: {}", smallest_untrackable_value);
         while smallest_untrackable_value <= highest_trackable_value {
+        	
             if smallest_untrackable_value > (std::i64::MAX / 2) {
                 buckets_needed += 1;
                 return buckets_needed;
@@ -627,7 +606,7 @@ mod tests {
         }
 
         pub fn get_count_at_value(&self, value: i64) -> i64 {
-            let counts_array_index = self.counts_array_index(value);
+        	let counts_array_index = self.counts_array_index(value);
             let counts_idx = if counts_array_index < 0 { 0 } else { counts_array_index };
             let index = if counts_idx < self.counts_array_length - 1 { counts_idx } else { self.counts_array_length - 1 };
             println!("read index: {}", index);

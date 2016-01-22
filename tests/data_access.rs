@@ -105,6 +105,15 @@ fn test_get_count_between_values() {
     assert_eq!(10_000, histogram.get_count_between_values(5000, 150_000_000));
 }
 
+#[test]
+fn test_get_count_at_value() {
+    let histogram = get_histogram();
+    let raw_histogram = get_raw_histogram();
+
+    assert_eq!(10000, raw_histogram.get_count_at_value(1000));
+    assert_eq!(10000, histogram.get_count_at_value(1000));
+}
+
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
     if !(actual > expected - delta && actual < expected + delta) {
         panic!(format!("Expected {} to be equal to {} +/-{}", actual, expected, delta));
