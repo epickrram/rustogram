@@ -38,6 +38,28 @@ mod tests {
         b
     }
 
+    fn min_i64(a: i64, b: i64) -> i64 {
+        if a < b {
+            return a;
+        }
+        b
+    }
+
+    fn max_i32(a: i32, b: i32) -> i32 {
+        if a > b {
+            return a;
+        }
+        b
+    }
+
+
+    fn min_i32(a: i32, b: i32) -> i32 {
+        if a < b {
+            return a;
+        }
+        b
+    }
+
     pub struct HistogramIterationValue {
         value_iterated_to: i64,
         value_iterated_from: i64,
@@ -543,6 +565,16 @@ mod tests {
 
         fn median_equivalent_value(&self, value: i64) -> i64 {
             self.lowest_equivalent_value(value) + (self.size_of_equivalent_value_range(value) >> 1)
+        }
+
+        pub fn get_count_between_values(&self, lower: i64, upper: i64) -> i64 {
+            let low_index = max_i32(0, self.counts_array_index(lower));
+            let high_index = min_i32(self.counts_array_index(upper), self.counts_array_length - 1);
+            let mut count = 0i64;
+            for i in low_index..(high_index + 1) {
+                count += self.get_count_at_index(i as i32);
+            }
+            count
         }
 
         pub fn reset(&mut self) {

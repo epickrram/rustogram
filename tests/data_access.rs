@@ -24,8 +24,8 @@ fn test_get_min_value() {
 
 #[test]
 fn test_get_mean_value() {
-    let mut histogram = get_histogram();
-    let mut raw_histogram = get_raw_histogram();
+    let histogram = get_histogram();
+    let raw_histogram = get_raw_histogram();
 
     let expected_raw_mean = (10_000_000f64 + 100_000_000f64) / 10001f64;
     let expected_mean = (1_000f64 + 50_000_000f64) / 2f64;
@@ -93,6 +93,16 @@ fn test_get_percentile_at_or_below_value() {
     assert_float_eq(99.99, raw_histogram.get_percentile_at_or_below_value(5000), 0.0001);
     assert_float_eq(50.0, histogram.get_percentile_at_or_below_value(5000), 0.0001);
     assert_float_eq(100.0, histogram.get_percentile_at_or_below_value(100000000), 0.0001);
+}
+
+#[test]
+fn test_get_count_between_values() {
+    let histogram = get_histogram();
+    let raw_histogram = get_raw_histogram();
+
+    assert_eq!(10_000, raw_histogram.get_count_between_values(1000, 1000));
+    assert_eq!(1, raw_histogram.get_count_between_values(5000, 150_000_000));
+    assert_eq!(10_000, histogram.get_count_between_values(5000, 150_000_000));
 }
 
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
