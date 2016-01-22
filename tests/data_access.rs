@@ -3,6 +3,7 @@ const HIGHEST_TRACKABLE_VALUE: i64 = 3600 * 1000 * 1000;
 const NUMBER_OF_SIGNIFICANT_VALUE_DIGITS: i32 = 3;
 
 use rustogram::histogram::*;
+use rustogram::iter::*;
 
 #[test]
 fn test_get_total_count() {
@@ -114,6 +115,21 @@ fn test_get_count_at_value() {
 
     assert_eq!(10000, raw_histogram.get_count_at_value(1000));
     assert_eq!(10000, histogram.get_count_at_value(1000));
+}
+
+#[test]
+fn test_get_recorded_values() {
+	let histogram : Histogram = get_histogram();
+	let asserter = |record: Option<(i64, &HistogramIterationValue)>| {
+		if record.is_some() {
+			let index_and_value = record.unwrap();
+			let (index, value) = index_and_value;
+			if index == 0 {
+				assert_eq!(10_000, value.get_count_added_in_this_iteration_step())
+			}
+		}
+	};
+	histogram.get_recorded_values(asserter);
 }
 
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
