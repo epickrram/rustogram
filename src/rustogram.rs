@@ -3,62 +3,6 @@ use std::fmt;
 use std;
 use iter::*;
 
-
-
-pub struct Histogram {
-    values: Box<[i64]>,
-    total_count: i64,
-    highest_trackable_value: i64,
-    lowest_discernible_value: i64,
-    number_of_significant_digits: i32,
-    bucket_count: i32,
-    sub_bucket_count: i32,
-    counts_array_length: i32,
-    word_size_in_bytes: i32,
-    unit_magnitude: i32,
-    sub_bucket_half_count_magnitude: i32,
-    sub_bucket_half_count: i32,
-    leading_zero_count_base: i32,
-    sub_bucket_mask: i64,
-    max_value: i64,
-    min_non_zero_value: i64,
-}
-
-fn determine_array_length_needed(highest_trackable_value: i64,
-                                 sub_bucket_count: i32,
-                                 unit_magnitude: i32)
-                                 -> i32 {
-    // TODO error handling if highest < 2 * lowest_discernible
-    get_length_for_number_of_buckets(get_buckets_needed_to_cover_value(highest_trackable_value,
-                                                                       sub_bucket_count,
-                                                                       unit_magnitude),
-                                     sub_bucket_count)
-}
-
-fn get_length_for_number_of_buckets(number_of_buckets: i32, sub_bucket_count: i32) -> i32 {
-    let length_needed = (number_of_buckets + 1) * (sub_bucket_count / 2);
-    length_needed
-}
-
-fn get_buckets_needed_to_cover_value(highest_trackable_value: i64,
-                                     sub_bucket_count: i32,
-                                     unit_magnitude: i32)
-                                     -> i32 {
-    let mut smallest_untrackable_value = ((sub_bucket_count as i64) << unit_magnitude) as i64;
-    let mut buckets_needed: i32 = 1;
-    while smallest_untrackable_value <= highest_trackable_value {
-
-        if smallest_untrackable_value > (std::i64::MAX / 2) {
-            buckets_needed += 1;
-            return buckets_needed;
-        }
-
-        smallest_untrackable_value <<= 1;
-        buckets_needed += 1;
-    }
-    buckets_needed
-}
-
 pub fn new_histogram(_highest_trackable_value: i64,
                      _number_of_significant_digits: i32)
                      -> Histogram {
@@ -115,61 +59,28 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
 
 }
 
+pub struct Histogram {
+    values: Box<[i64]>,
+    total_count: i64,
+    highest_trackable_value: i64,
+    lowest_discernible_value: i64,
+    number_of_significant_digits: i32,
+    bucket_count: i32,
+    sub_bucket_count: i32,
+    counts_array_length: i32,
+    word_size_in_bytes: i32,
+    unit_magnitude: i32,
+    sub_bucket_half_count_magnitude: i32,
+    sub_bucket_half_count: i32,
+    leading_zero_count_base: i32,
+    sub_bucket_mask: i64,
+    max_value: i64,
+    min_non_zero_value: i64,
+}
+
 impl Histogram {
-    fn increment_total_count(&mut self) {
-        self.total_count += 1;
-    }
-
-    fn counts_array_index_by_bucket(&self, bucket_index: i32, sub_bucket_index: i32) -> i32 {
-        let bucket_base_index = (bucket_index + 1) << self.sub_bucket_half_count_magnitude;
-        let offset_in_bucket = sub_bucket_index - self.sub_bucket_half_count;
-
-
-        bucket_base_index + offset_in_bucket
-    }
-
-    fn increment_count_at_index(&mut self, counts_index: i32) {
-        self.values[counts_index as usize] += 1;
-    }
-
-    fn update_min_and_max(&mut self, value: i64) {
-        if value > self.max_value {
-            self.max_value = value;
-        }
-        if value != 0 && value < self.min_non_zero_value {
-            self.min_non_zero_value = value;
-        }
-    }
-
-    fn get_bucket_index(&self, value: i64) -> i32 {
-        (self.leading_zero_count_base as i64 -
-         (value | self.sub_bucket_mask as i64).leading_zeros() as i64) as i32
-    }
-
-    fn get_sub_bucket_index(&self, value: i64, bucket_index: i32) -> i32 {
-        ((value as u64) >> (bucket_index + self.unit_magnitude)) as i32
-    }
-
-    fn counts_array_index(&self, value: i64) -> i32 {
-        let bucket_index = self.get_bucket_index(value);
-        let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
-        self.counts_array_index_by_bucket(bucket_index, sub_bucket_index)
-    }
-
-    fn record_single_value(&mut self, value: i64) {
-        let counts_index = self.counts_array_index(value);
-        // TODO handle out of bounds exceptions
-        self.increment_count_at_index(counts_index);
-        self.update_min_and_max(value);
-        self.increment_total_count();
-    }
-
     pub fn get_count_at_index(&self, index: i32) -> i64 {
         self.values[index as usize]
-    }
-
-    fn value_from_index_by_bucket(&self, bucket_index: i32, sub_bucket_index: i32) -> i64 {
-        (sub_bucket_index as i64) << (bucket_index + self.unit_magnitude)
     }
 
     pub fn value_from_index(&self, index: i32) -> i64 {
@@ -187,21 +98,6 @@ impl Histogram {
         let bucket_index = self.get_bucket_index(value);
         let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
         self.value_from_index_by_bucket(bucket_index, sub_bucket_index)
-    }
-
-    fn size_of_equivalent_value_range(&self, value: i64) -> i64 {
-        let bucket_index = self.get_bucket_index(value);
-        let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
-        let mult = if sub_bucket_index >= self.sub_bucket_count {
-            bucket_index + 1
-        } else {
-            bucket_index
-        };
-        1i64 << (self.unit_magnitude + mult)
-    }
-
-    fn next_non_equivalent_value(&self, value: i64) -> i64 {
-        self.lowest_equivalent_value(value) + self.size_of_equivalent_value_range(value)
     }
 
     pub fn highest_equivalent_value(&self, value: i64) -> i64 {
@@ -301,10 +197,6 @@ impl Histogram {
         (100 * total_to_current_index) as f64 / self.total_count as f64
     }
 
-    fn median_equivalent_value(&self, value: i64) -> i64 {
-        self.lowest_equivalent_value(value) + (self.size_of_equivalent_value_range(value) >> 1)
-    }
-
     pub fn get_count_between_values(&self, lower: i64, upper: i64) -> i64 {
         let low_index = cmp::max(0, self.counts_array_index(lower));
         let high_index = cmp::min(self.counts_array_index(upper), self.counts_array_length - 1);
@@ -373,17 +265,84 @@ impl Histogram {
         } else {
             counts_array_index
         };
-        let index = if counts_idx < self.counts_array_length - 1 {
-            counts_idx
-        } else {
-            self.counts_array_length - 1
-        };
-        println!("read index: {}", index);
+        let index = cmp::min(counts_idx, self.counts_array_length - 1);
         self.values[index as usize]
     }
 
     pub fn get_total_count(&self) -> i64 {
         self.total_count
+    }
+
+    fn increment_total_count(&mut self) {
+        self.total_count += 1;
+    }
+
+    fn counts_array_index_by_bucket(&self, bucket_index: i32, sub_bucket_index: i32) -> i32 {
+        let bucket_base_index = (bucket_index + 1) << self.sub_bucket_half_count_magnitude;
+        let offset_in_bucket = sub_bucket_index - self.sub_bucket_half_count;
+
+
+        bucket_base_index + offset_in_bucket
+    }
+
+    fn increment_count_at_index(&mut self, counts_index: i32) {
+        self.values[counts_index as usize] += 1;
+    }
+
+    fn update_min_and_max(&mut self, value: i64) {
+        if value > self.max_value {
+            self.max_value = value;
+        }
+        if value != 0 && value < self.min_non_zero_value {
+            self.min_non_zero_value = value;
+        }
+    }
+
+    fn get_bucket_index(&self, value: i64) -> i32 {
+        (self.leading_zero_count_base as i64 -
+         (value | self.sub_bucket_mask as i64).leading_zeros() as i64) as i32
+    }
+
+    fn get_sub_bucket_index(&self, value: i64, bucket_index: i32) -> i32 {
+        ((value as u64) >> (bucket_index + self.unit_magnitude)) as i32
+    }
+
+    fn counts_array_index(&self, value: i64) -> i32 {
+        let bucket_index = self.get_bucket_index(value);
+        let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
+        self.counts_array_index_by_bucket(bucket_index, sub_bucket_index)
+    }
+
+    fn record_single_value(&mut self, value: i64) {
+        let counts_index = self.counts_array_index(value);
+        // TODO handle out of bounds exceptions
+        self.increment_count_at_index(counts_index);
+        self.update_min_and_max(value);
+        self.increment_total_count();
+    }
+
+    fn value_from_index_by_bucket(&self, bucket_index: i32, sub_bucket_index: i32) -> i64 {
+        (sub_bucket_index as i64) << (bucket_index + self.unit_magnitude)
+    }
+
+    fn size_of_equivalent_value_range(&self, value: i64) -> i64 {
+        let bucket_index = self.get_bucket_index(value);
+        let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
+        let mult = if sub_bucket_index >= self.sub_bucket_count {
+            bucket_index + 1
+        } else {
+            bucket_index
+        };
+        1i64 << (self.unit_magnitude + mult)
+    }
+
+    fn next_non_equivalent_value(&self, value: i64) -> i64 {
+        self.lowest_equivalent_value(value) + self.size_of_equivalent_value_range(value)
+    }
+
+
+    fn median_equivalent_value(&self, value: i64) -> i64 {
+        self.lowest_equivalent_value(value) + (self.size_of_equivalent_value_range(value) >> 1)
     }
 }
 
@@ -407,4 +366,35 @@ impl fmt::Display for Histogram {
         write!(f, "]")
 
     }
+}
+
+fn determine_array_length_needed(highest_trackable_value: i64,
+                                 sub_bucket_count: i32,
+                                 unit_magnitude: i32)
+                                 -> i32 {
+    // TODO error handling if highest < 2 * lowest_discernible
+    let buckets_needed_to_cover_value = get_buckets_needed_to_cover_value(highest_trackable_value,
+                                                                          sub_bucket_count,
+                                                                          unit_magnitude);
+
+    (buckets_needed_to_cover_value + 1) * (sub_bucket_count / 2)
+}
+
+fn get_buckets_needed_to_cover_value(highest_trackable_value: i64,
+                                     sub_bucket_count: i32,
+                                     unit_magnitude: i32)
+                                     -> i32 {
+    let mut smallest_untrackable_value = ((sub_bucket_count as i64) << unit_magnitude) as i64;
+    let mut buckets_needed: i32 = 1;
+    while smallest_untrackable_value <= highest_trackable_value {
+
+        if smallest_untrackable_value > (std::i64::MAX / 2) {
+            buckets_needed += 1;
+            return buckets_needed;
+        }
+
+        smallest_untrackable_value <<= 1;
+        buckets_needed += 1;
+    }
+    buckets_needed
 }
