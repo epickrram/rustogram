@@ -1,6 +1,7 @@
 extern crate rustogram;
 const HIGHEST_TRACKABLE_VALUE: i64 = 3600 * 1000 * 1000;
-const NUMBER_OF_SIGNIFICANT_VALUE_DIGITS: i32 = 3;   
+const NUMBER_OF_SIGNIFICANT_VALUE_DIGITS: i32 = 3;
+
 
 #[test]
 fn test_get_total_count() {
@@ -79,7 +80,7 @@ fn test_get_value_at_percentile() {
 #[test]
 fn test_get_value_at_percentile_for_large_histogram() {
     let largest_value = 1000000000000;
-    let mut histogram = rustogram::new_histogram(largest_value, 5);
+    let mut histogram = rustogram::rustogram::new_histogram(largest_value, 5);
     histogram.record_value(largest_value);
 
     assert!(histogram.get_value_at_percentile(100.0) > 0);
@@ -120,8 +121,8 @@ fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
     }
 }
 
-fn get_histogram() -> rustogram::Histogram {
-    let mut h = rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+fn get_histogram() -> rustogram::rustogram::Histogram {
+    let mut h = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     let mut i = 10_000;
     while i != 0 {
@@ -132,8 +133,8 @@ fn get_histogram() -> rustogram::Histogram {
     h
 }
 
-fn get_raw_histogram() -> rustogram::Histogram {
-     let mut h = rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+fn get_raw_histogram() -> rustogram::rustogram::Histogram {
+    let mut h = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     let mut i = 10_000;
     while i != 0 {
