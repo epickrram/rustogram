@@ -1,4 +1,16 @@
 [package]
 name = "rustogram"
 version = "0.1.0"
-authors = ["pricem <pricem@lmax.com>"]
+authors = ["Mark Price <mail@epickrram.com>"]
+
+description = "A rust port of HdrHistogram (https://github.com/HdrHistogram/HdrHistogram)"
+
+#documentation = "..."
+homepage = "https://github.com/epickrram/rustogram"
+repository = "https://github.com/epickrram/rustogram"
+
+readme = "README.md"
+
+keywords = ["histogram", "hdr", "dynamic", "range"]
+
+license = "Apache-2.0"
