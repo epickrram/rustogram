@@ -3,9 +3,11 @@ const HIGHEST_TRACKABLE_VALUE: i64 = 3600 * 1000 * 1000;
 const NUMBER_OF_SIGNIFICANT_VALUE_DIGITS: i32 = 3;
 const TEST_VALUE_LEVEL: i64 = 4;
 
+use rustogram::rustogram::*;
+
 #[test]
 fn test_empty_histogram() {
-    let histogram = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+    let histogram = new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     assert_eq!(0, histogram.get_min_value());
     assert_eq!(0, histogram.get_max_value());
@@ -16,7 +18,7 @@ fn test_empty_histogram() {
 
 #[test]
 fn test_construction_argument_gets() {
-    let histogram = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+    let histogram = new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     assert_eq!(1, histogram.get_lowest_discernible_value());
     assert_eq!(HIGHEST_TRACKABLE_VALUE, histogram.get_highest_trackable_value());
@@ -25,7 +27,7 @@ fn test_construction_argument_gets() {
 
 #[test]
 fn test_record_value() {
-    let mut histogram = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+    let mut histogram = new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     histogram.record_value(TEST_VALUE_LEVEL);
 
@@ -36,7 +38,7 @@ fn test_record_value() {
 
 #[test]
 fn test_construction_with_large_numbers() {
-    let mut histogram = rustogram::rustogram::new_histogram_lower_bound(20000000, 100000000, 5);
+    let mut histogram = new_histogram_lower_bound(20000000, 100000000, 5);
 
     histogram.record_value(100000000);
     println!("recorded value 1");
@@ -51,7 +53,7 @@ fn test_construction_with_large_numbers() {
 
 #[test]
 fn test_reset() {
-    let mut histogram = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+    let mut histogram = new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     histogram.record_value(TEST_VALUE_LEVEL);
 
@@ -64,7 +66,7 @@ fn test_reset() {
 
 #[test]
 fn test_get_min_value() {
-    let mut histogram = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+    let mut histogram = new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
 
     histogram.record_value(1_000);
     histogram.record_value(1_000_000);
@@ -74,14 +76,14 @@ fn test_get_min_value() {
 
 #[test]
 fn test_get_max_value() {
-   let mut histogram = rustogram::rustogram::new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
+   let mut histogram = new_histogram(HIGHEST_TRACKABLE_VALUE, NUMBER_OF_SIGNIFICANT_VALUE_DIGITS);
     histogram.record_value(1_000);
     histogram.record_value(1_000_000);
 
     assert_eq!(1_000_000, histogram.get_max_value());
 }
 
-fn verify_max_value(histogram: rustogram::rustogram::Histogram) {
+fn verify_max_value(histogram: Histogram) {
     let mut computed_max_value: i64 = 0;
     for i in 0..histogram.get_counts_array_length() {
         if histogram.get_count_at_index(i) > 0 {
