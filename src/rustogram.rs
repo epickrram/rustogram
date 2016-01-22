@@ -21,12 +21,18 @@ pub struct Histogram {
     leading_zero_count_base: i32,
     sub_bucket_mask: i64,
     max_value: i64,
-    min_non_zero_value: i64
+    min_non_zero_value: i64,
 }
 
-fn determine_array_length_needed(highest_trackable_value: i64, sub_bucket_count: i32, unit_magnitude: i32) -> i32 {
+fn determine_array_length_needed(highest_trackable_value: i64,
+                                 sub_bucket_count: i32,
+                                 unit_magnitude: i32)
+                                 -> i32 {
     // TODO error handling if highest < 2 * lowest_discernible
-    get_length_for_number_of_buckets(get_buckets_needed_to_cover_value(highest_trackable_value, sub_bucket_count, unit_magnitude), sub_bucket_count)
+    get_length_for_number_of_buckets(get_buckets_needed_to_cover_value(highest_trackable_value,
+                                                                       sub_bucket_count,
+                                                                       unit_magnitude),
+                                     sub_bucket_count)
 }
 
 fn get_length_for_number_of_buckets(number_of_buckets: i32, sub_bucket_count: i32) -> i32 {
@@ -34,11 +40,14 @@ fn get_length_for_number_of_buckets(number_of_buckets: i32, sub_bucket_count: i3
     length_needed
 }
 
-fn get_buckets_needed_to_cover_value(highest_trackable_value: i64, sub_bucket_count: i32, unit_magnitude: i32) -> i32 {
+fn get_buckets_needed_to_cover_value(highest_trackable_value: i64,
+                                     sub_bucket_count: i32,
+                                     unit_magnitude: i32)
+                                     -> i32 {
     let mut smallest_untrackable_value = ((sub_bucket_count as i64) << unit_magnitude) as i64;
     let mut buckets_needed: i32 = 1;
     while smallest_untrackable_value <= highest_trackable_value {
-    	
+
         if smallest_untrackable_value > (std::i64::MAX / 2) {
             buckets_needed += 1;
             return buckets_needed;
@@ -50,49 +59,60 @@ fn get_buckets_needed_to_cover_value(highest_trackable_value: i64, sub_bucket_co
     buckets_needed
 }
 
-pub fn new_histogram(_highest_trackable_value: i64, _number_of_significant_digits: i32) -> Histogram {
+pub fn new_histogram(_highest_trackable_value: i64,
+                     _number_of_significant_digits: i32)
+                     -> Histogram {
     new_histogram_lower_bound(1, _highest_trackable_value, _number_of_significant_digits)
 }
 
-pub fn new_histogram_lower_bound(_lowest_discernible_value: i64, _highest_trackable_value: i64, _number_of_significant_digits: i32) -> Histogram {
-        let largest_value_with_single_unit_resolution = 2 * 10i64.pow(_number_of_significant_digits as u32); 
-        let _unit_magnitude = ((_lowest_discernible_value as f64).ln() / 2f64.ln()) as i32;
-        let sub_bucket_count_magnitude = ((largest_value_with_single_unit_resolution as f64).ln() / 2f64.ln()).ceil() as i32;
-        let _sub_bucket_half_count_magnitude = 
-            if sub_bucket_count_magnitude > 1 { 
-                sub_bucket_count_magnitude - 1
-            } else {
-                0
-            };
-        let _sub_bucket_count = 2i64.pow((_sub_bucket_half_count_magnitude + 1) as u32) as i32;
-        let _sub_bucket_half_count = _sub_bucket_count / 2;
-        let _sub_bucket_mask = ((_sub_bucket_count as i64) - 1) << _unit_magnitude;
+pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
+                                 _highest_trackable_value: i64,
+                                 _number_of_significant_digits: i32)
+                                 -> Histogram {
+    let largest_value_with_single_unit_resolution = 2 *
+                                                    10i64.pow(_number_of_significant_digits as u32);
+    let _unit_magnitude = ((_lowest_discernible_value as f64).ln() / 2f64.ln()) as i32;
+    let sub_bucket_count_magnitude = ((largest_value_with_single_unit_resolution as f64).ln() /
+                                      2f64.ln())
+                                         .ceil() as i32;
+    let _sub_bucket_half_count_magnitude = if sub_bucket_count_magnitude > 1 {
+        sub_bucket_count_magnitude - 1
+    } else {
+        0
+    };
+    let _sub_bucket_count = 2i64.pow((_sub_bucket_half_count_magnitude + 1) as u32) as i32;
+    let _sub_bucket_half_count = _sub_bucket_count / 2;
+    let _sub_bucket_mask = ((_sub_bucket_count as i64) - 1) << _unit_magnitude;
 
-        let _leading_zero_count_base = 64 - _unit_magnitude - _sub_bucket_half_count_magnitude - 1;
+    let _leading_zero_count_base = 64 - _unit_magnitude - _sub_bucket_half_count_magnitude - 1;
 
-        // establish size (highest_trackable_value)
-        let _counts_array_length = determine_array_length_needed(_highest_trackable_value, _sub_bucket_count, _unit_magnitude);
-        let _bucket_count = get_buckets_needed_to_cover_value(_highest_trackable_value, _sub_bucket_count, _unit_magnitude);
+    // establish size (highest_trackable_value)
+    let _counts_array_length = determine_array_length_needed(_highest_trackable_value,
+                                                             _sub_bucket_count,
+                                                             _unit_magnitude);
+    let _bucket_count = get_buckets_needed_to_cover_value(_highest_trackable_value,
+                                                          _sub_bucket_count,
+                                                          _unit_magnitude);
 
-        Histogram {
-            values: vec![0; _counts_array_length as usize].into_boxed_slice(),
-            total_count: 0,
-            highest_trackable_value: _highest_trackable_value,
-            lowest_discernible_value: _lowest_discernible_value,
-            number_of_significant_digits: _number_of_significant_digits,
-            bucket_count: _bucket_count,
-            sub_bucket_count: _sub_bucket_count,
-            counts_array_length: _counts_array_length,
-            word_size_in_bytes: 8,
-            unit_magnitude: _unit_magnitude,
-            sub_bucket_half_count_magnitude: _sub_bucket_half_count_magnitude,
-            sub_bucket_half_count: _sub_bucket_half_count,
-            leading_zero_count_base: _leading_zero_count_base,
-            sub_bucket_mask: _sub_bucket_mask,
-            max_value: 0,
-            min_non_zero_value: std::i64::MAX
-        }
-        
+    Histogram {
+        values: vec![0; _counts_array_length as usize].into_boxed_slice(),
+        total_count: 0,
+        highest_trackable_value: _highest_trackable_value,
+        lowest_discernible_value: _lowest_discernible_value,
+        number_of_significant_digits: _number_of_significant_digits,
+        bucket_count: _bucket_count,
+        sub_bucket_count: _sub_bucket_count,
+        counts_array_length: _counts_array_length,
+        word_size_in_bytes: 8,
+        unit_magnitude: _unit_magnitude,
+        sub_bucket_half_count_magnitude: _sub_bucket_half_count_magnitude,
+        sub_bucket_half_count: _sub_bucket_half_count,
+        leading_zero_count_base: _leading_zero_count_base,
+        sub_bucket_mask: _sub_bucket_mask,
+        max_value: 0,
+        min_non_zero_value: std::i64::MAX,
+    }
+
 }
 
 impl Histogram {
@@ -122,13 +142,14 @@ impl Histogram {
     }
 
     fn get_bucket_index(&self, value: i64) -> i32 {
-        (self.leading_zero_count_base as i64 - (value | self.sub_bucket_mask as i64).leading_zeros() as i64) as i32
+        (self.leading_zero_count_base as i64 -
+         (value | self.sub_bucket_mask as i64).leading_zeros() as i64) as i32
     }
 
     fn get_sub_bucket_index(&self, value: i64, bucket_index: i32) -> i32 {
         ((value as u64) >> (bucket_index + self.unit_magnitude)) as i32
     }
-    
+
     fn counts_array_index(&self, value: i64) -> i32 {
         let bucket_index = self.get_bucket_index(value);
         let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
@@ -153,7 +174,8 @@ impl Histogram {
 
     pub fn value_from_index(&self, index: i32) -> i64 {
         let mut bucket_index: i32 = (index >> self.sub_bucket_half_count_magnitude) - 1;
-        let mut sub_bucket_index: i32 = (index & (self.sub_bucket_half_count - 1)) + self.sub_bucket_half_count;
+        let mut sub_bucket_index: i32 = (index & (self.sub_bucket_half_count - 1)) +
+                                        self.sub_bucket_half_count;
         if bucket_index < 0 {
             sub_bucket_index -= self.sub_bucket_half_count;
             bucket_index = 0;
@@ -170,7 +192,11 @@ impl Histogram {
     fn size_of_equivalent_value_range(&self, value: i64) -> i64 {
         let bucket_index = self.get_bucket_index(value);
         let sub_bucket_index = self.get_sub_bucket_index(value, bucket_index);
-        let mult = if sub_bucket_index >= self.sub_bucket_count { bucket_index + 1 } else { bucket_index };
+        let mult = if sub_bucket_index >= self.sub_bucket_count {
+            bucket_index + 1
+        } else {
+            bucket_index
+        };
         1i64 << (self.unit_magnitude + mult)
     }
 
@@ -182,7 +208,9 @@ impl Histogram {
         self.next_non_equivalent_value(value) - 1
     }
 
-    pub fn record_value_with_expected_interval(&mut self, value: i64, expected_interval_between_value_samples: i64) {
+    pub fn record_value_with_expected_interval(&mut self,
+                                               value: i64,
+                                               expected_interval_between_value_samples: i64) {
         if expected_interval_between_value_samples <= 0 {
             return;
         }
@@ -199,7 +227,11 @@ impl Histogram {
     }
 
     pub fn get_min_value(&self) -> i64 {
-        if self.min_non_zero_value == std::i64::MAX { 0 } else { self.min_non_zero_value }
+        if self.min_non_zero_value == std::i64::MAX {
+            0
+        } else {
+            self.min_non_zero_value
+        }
     }
 
     pub fn get_max_value(&self) -> i64 {
@@ -218,9 +250,11 @@ impl Histogram {
 
         while iter.has_next() {
             let iteration_value = iter.next();
-            total_value += (self.median_equivalent_value(iteration_value.get_value_iterated_to()) * iteration_value.get_count_at_value_iterated_to()) as f64;
+            total_value +=
+                (self.median_equivalent_value(iteration_value.get_value_iterated_to()) *
+                 iteration_value.get_count_at_value_iterated_to()) as f64;
         }
-        
+
         return total_value / self.total_count as f64;
     }
 
@@ -237,10 +271,13 @@ impl Histogram {
         iter.reset(self.total_count, self.unit_magnitude);
         while iter.has_next() {
             let iteration_value = iter.next();
-            let deviation = self.median_equivalent_value(iteration_value.get_value_iterated_to()) as f64 - mean;
-            geometric_deviation_total += (deviation * deviation) * iteration_value.get_count_added_in_this_iteration_step() as f64;
+            let deviation =
+                self.median_equivalent_value(iteration_value.get_value_iterated_to()) as f64 - mean;
+            geometric_deviation_total +=
+                (deviation * deviation) *
+                iteration_value.get_count_added_in_this_iteration_step() as f64;
         }
-       
+
         (geometric_deviation_total / self.total_count as f64).sqrt()
     }
 
@@ -249,10 +286,10 @@ impl Histogram {
             return 100f64;
         }
         let counts_array_index = self.counts_array_index(value);
-        let target_index = if counts_array_index < (self.counts_array_length - 1) { 
-            counts_array_index 
-        } else { 
-            self.counts_array_length -1
+        let target_index = if counts_array_index < (self.counts_array_length - 1) {
+            counts_array_index
+        } else {
+            self.counts_array_length - 1
         };
 
         let mut total_to_current_index = 0i64;
@@ -283,7 +320,7 @@ impl Histogram {
         for i in 0..self.counts_array_length {
             self.values[i as usize] = 0;
         }
-        self.max_value = 0;   
+        self.max_value = 0;
         self.min_non_zero_value = std::i64::MAX;
     }
 
@@ -293,16 +330,19 @@ impl Histogram {
 
     pub fn get_value_at_percentile(&self, percentile: f64) -> i64 {
         let requested_percentile = percentile.min(100f64);
-        let count_at_percentile =  cmp::max((((requested_percentile / 100f64) * self.get_total_count() as f64) + 0.5f64) as i64, 1i64);
+        let count_at_percentile =
+            cmp::max((((requested_percentile / 100f64) * self.get_total_count() as f64) +
+                      0.5f64) as i64,
+                     1i64);
         let mut total_to_current_index: i64 = 0;
         for i in 0..self.counts_array_length {
             total_to_current_index += self.get_count_at_index(i);
             if total_to_current_index >= count_at_percentile {
                 let value_at_index: i64 = self.value_from_index(i);
-                if percentile == 0f64 { 
-                    return self.lowest_equivalent_value(value_at_index) 
-                } else { 
-                    return self.highest_equivalent_value(value_at_index) 
+                if percentile == 0f64 {
+                    return self.lowest_equivalent_value(value_at_index);
+                } else {
+                    return self.highest_equivalent_value(value_at_index);
                 }
             }
         }
@@ -327,9 +367,17 @@ impl Histogram {
     }
 
     pub fn get_count_at_value(&self, value: i64) -> i64 {
-    	let counts_array_index = self.counts_array_index(value);
-        let counts_idx = if counts_array_index < 0 { 0 } else { counts_array_index };
-        let index = if counts_idx < self.counts_array_length - 1 { counts_idx } else { self.counts_array_length - 1 };
+        let counts_array_index = self.counts_array_index(value);
+        let counts_idx = if counts_array_index < 0 {
+            0
+        } else {
+            counts_array_index
+        };
+        let index = if counts_idx < self.counts_array_length - 1 {
+            counts_idx
+        } else {
+            self.counts_array_length - 1
+        };
         println!("read index: {}", index);
         self.values[index as usize]
     }
@@ -343,9 +391,15 @@ impl fmt::Display for Histogram {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "Histogram["));
         try!(write!(f, "total_count: {}, ", self.total_count));
-        try!(write!(f, "highest_trackable_value: {}, ", self.highest_trackable_value));
-        try!(write!(f, "lowest_discernible_value: {}, ", self.lowest_discernible_value));
-        try!(write!(f, "number_of_significant_digits: {}, ", self.number_of_significant_digits));
+        try!(write!(f,
+                    "highest_trackable_value: {}, ",
+                    self.highest_trackable_value));
+        try!(write!(f,
+                    "lowest_discernible_value: {}, ",
+                    self.lowest_discernible_value));
+        try!(write!(f,
+                    "number_of_significant_digits: {}, ",
+                    self.number_of_significant_digits));
         try!(write!(f, "bucket_count: {}, ", self.bucket_count));
         try!(write!(f, "sub_bucket_count: {}, ", self.sub_bucket_count));
         try!(write!(f, "counts_array_length: {}, ", self.counts_array_length));
