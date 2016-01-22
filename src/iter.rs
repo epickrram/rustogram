@@ -69,6 +69,8 @@ impl HistogramIterationValue {
     }
 }
 
+
+
 pub struct RecordedValuesIterator<'a> {
     histogram: &'a Histogram,
     saved_histogram_total_raw_count: i64,
@@ -103,8 +105,6 @@ pub fn new_iterator<'a>(_histogram: &'a Histogram) -> RecordedValuesIterator {
         visited_index: -1,
         current_iteration_value: HistogramIterationValue::new(),
     }
-
-
 }
 
 impl<'a> RecordedValuesIterator<'a> {

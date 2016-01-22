@@ -182,11 +182,7 @@ impl Histogram {
             return 100f64;
         }
         let counts_array_index = self.counts_array_index(value);
-        let target_index = if counts_array_index < (self.counts_array_length - 1) {
-            counts_array_index
-        } else {
-            self.counts_array_length - 1
-        };
+        let target_index = cmp::min(counts_array_index, self.counts_array_length - 1);
 
         let mut total_to_current_index = 0i64;
 
@@ -271,6 +267,14 @@ impl Histogram {
 
     pub fn get_total_count(&self) -> i64 {
         self.total_count
+    }
+    
+    pub fn get_recorded_values<F>(&self, f: F) where F: Fn(Option<&HistogramIterationValue>) {
+    	let mut iter = new_iterator(self);
+    	while iter.has_next() {
+    		f(Some(iter.next()))
+    	}
+    	f(None)
     }
 
     fn increment_total_count(&mut self) {
