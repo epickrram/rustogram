@@ -37,7 +37,6 @@ fn get_length_for_number_of_buckets(number_of_buckets: i32, sub_bucket_count: i3
 fn get_buckets_needed_to_cover_value(highest_trackable_value: i64, sub_bucket_count: i32, unit_magnitude: i32) -> i32 {
     let mut smallest_untrackable_value = ((sub_bucket_count as i64) << unit_magnitude) as i64;
     let mut buckets_needed: i32 = 1;
-    println!("smallest untrackable value: {}", smallest_untrackable_value);
     while smallest_untrackable_value <= highest_trackable_value {
     	
         if smallest_untrackable_value > (std::i64::MAX / 2) {
@@ -48,7 +47,6 @@ fn get_buckets_needed_to_cover_value(highest_trackable_value: i64, sub_bucket_co
         smallest_untrackable_value <<= 1;
         buckets_needed += 1;
     }
-    println!("buckets needed: {}", buckets_needed);
     buckets_needed
 }
 
@@ -76,10 +74,7 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64, _highest_tracka
         let _counts_array_length = determine_array_length_needed(_highest_trackable_value, _sub_bucket_count, _unit_magnitude);
         let _bucket_count = get_buckets_needed_to_cover_value(_highest_trackable_value, _sub_bucket_count, _unit_magnitude);
 
-
-
-
-        let h = Histogram {
+        Histogram {
             values: vec![0; _counts_array_length as usize].into_boxed_slice(),
             total_count: 0,
             highest_trackable_value: _highest_trackable_value,
@@ -96,16 +91,11 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64, _highest_tracka
             sub_bucket_mask: _sub_bucket_mask,
             max_value: 0,
             min_non_zero_value: std::i64::MAX
-        };
-
-        h.init();
-        h
+        }
+        
 }
 
 impl Histogram {
-    fn init(&self) {
-    }
-
     fn increment_total_count(&mut self) {
         self.total_count += 1;
     }
