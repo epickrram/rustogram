@@ -1,2 +1,2 @@
-pub mod rustogram;
+pub mod histogram;
 pub mod iter;

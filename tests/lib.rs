@@ -3,7 +3,7 @@ const HIGHEST_TRACKABLE_VALUE: i64 = 3600 * 1000 * 1000;
 const NUMBER_OF_SIGNIFICANT_VALUE_DIGITS: i32 = 3;
 const TEST_VALUE_LEVEL: i64 = 4;
 
-use rustogram::rustogram::*;
+use rustogram::histogram::*;
 
 #[test]
 fn test_empty_histogram() {

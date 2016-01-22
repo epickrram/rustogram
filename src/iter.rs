@@ -1,5 +1,5 @@
 use std::fmt;
-use rustogram::*;
+use histogram::*;
 
 pub struct HistogramIterationValue {
     value_iterated_to: i64,
