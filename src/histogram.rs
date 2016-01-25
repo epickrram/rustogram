@@ -269,11 +269,12 @@ impl Histogram {
         self.total_count
     }
     
-    pub fn get_recorded_values<F>(&self, f: F) where F: Fn(Option<(i64, &HistogramIterationValue)>) {
+    pub fn get_recorded_values<F, T>(&self, f: F, t: &mut T) where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>) {
     	let mut iter = new_iterator(self);
+    	iter.reset(self.total_count, self.unit_magnitude);
     	let mut index = 0;
     	while iter.has_next() {
-    		f(Some((index, iter.next())));
+    		f(Some((index, iter.next(), t)));
     		index += 1;
     	}
     	f(None)

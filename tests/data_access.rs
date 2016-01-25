@@ -117,19 +117,75 @@ fn test_get_count_at_value() {
     assert_eq!(10000, histogram.get_count_at_value(1000));
 }
 
+struct AssertionCounter {
+	count: i64
+}
+
+impl AssertionCounter {
+	fn increment(&mut self) {
+		self.count += 1;
+	}
+	
+	fn increment_by(&mut self, increment: i64) {
+		self.count += increment;
+	}
+	
+	fn reset(&mut self) {
+		self.count = 0;
+	}
+}
+
 #[test]
 fn test_get_recorded_values() {
-	let histogram : Histogram = get_histogram();
-	let asserter = |record: Option<(i64, &HistogramIterationValue)>| {
+	let histogram = get_histogram();
+	let raw_histogram : Histogram = get_raw_histogram();
+	
+	let mut counter = AssertionCounter { count: 0 };
+	
+	let raw_histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
 		if record.is_some() {
 			let index_and_value = record.unwrap();
-			let (index, value) = index_and_value;
+			let (index, value, counter) = index_and_value;
 			if index == 0 {
-				assert_eq!(10_000, value.get_count_added_in_this_iteration_step())
+				assert_eq!(10_000, value.get_count_added_in_this_iteration_step());
+				counter.increment();
+			} else {
+				assert_eq!(1, value.get_count_added_in_this_iteration_step());
+				counter.increment();
 			}
 		}
 	};
-	histogram.get_recorded_values(asserter);
+	raw_histogram.get_recorded_values(raw_histogram_asserter, &mut counter);
+	
+	assert_eq!(2, counter.count);
+	
+	counter.reset();
+	
+	let histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
+		if record.is_some() {
+			let index_and_value = record.unwrap();
+			let (index, value, counter) = index_and_value;
+			if index == 0 {
+				assert_eq!(10_000, value.get_count_added_in_this_iteration_step());
+			}
+				
+			assert!(value.get_count_at_value_iterated_to() != 0);
+			assert_eq!(value.get_count_at_value_iterated_to(), value.get_count_added_in_this_iteration_step());
+			counter.increment_by(value.get_count_added_in_this_iteration_step());
+		}
+	};
+	histogram.get_recorded_values(histogram_asserter, &mut counter);
+	
+	assert_eq!(20_000, counter.count);
+}
+
+#[test]
+fn test_get_recorded_values_with_null_pass_through_argument() {
+	let histogram = get_histogram();
+	let histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
+		
+	}
+	histogram.get_recorded_values(histogram_asserter, None);
 }
 
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
