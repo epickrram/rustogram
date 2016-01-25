@@ -179,15 +179,6 @@ fn test_get_recorded_values() {
 	assert_eq!(20_000, counter.count);
 }
 
-#[test]
-fn test_get_recorded_values_with_null_pass_through_argument() {
-	let histogram = get_histogram();
-	let histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
-		
-	}
-	histogram.get_recorded_values(histogram_asserter, None);
-}
-
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
     if !(actual > expected - delta && actual < expected + delta) {
         panic!(format!("Expected {} to be equal to {} +/-{}", actual, expected, delta));
