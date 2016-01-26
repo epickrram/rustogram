@@ -282,8 +282,8 @@ impl Histogram {
         f(None)
     }
 
-	pub fn collect_recorded_values(&self, container: &mut Vec<HistogramIterationValue>) {
-    	let mut iter = new_iterator(self);
+    pub fn collect_recorded_values(&self, container: &mut Vec<HistogramIterationValue>) {
+        let mut iter = new_iterator(self);
         iter.reset(self.total_count, self.unit_magnitude);
 
         while iter.has_next() {
