@@ -280,6 +280,8 @@ impl Histogram {
     	f(None)
     }
     
+    
+    
     pub fn get_all_values<F, T>(&self, f: F, t: &mut T) where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>) {
     	let mut iter = new_all_values_iterator(self);
     	iter.reset(self.total_count, self.unit_magnitude);

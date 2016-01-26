@@ -184,14 +184,14 @@ fn test_get_all_values() {
 	let histogram = get_histogram();
 	let raw_histogram = get_raw_histogram();
 	
-	let mut all_values: Vec<HistogramIterationValue> = Vec::new();
-	raw_histogram.put_all_values(&mut all_values); 
+	let mut all_raw_values: Vec<HistogramIterationValue> = Vec::new();
+	raw_histogram.put_all_values(&mut all_raw_values); 
 	
 	let mut index = 0;
 	let mut total_count_to_this_point = 0;
 	let mut total_value_to_this_point = 0;
 	
-	for value in all_values {
+	for value in all_raw_values {
 		if index == 1000 {
 			assert_eq!(10000, value.get_count_added_in_this_iteration_step());
 		} else if histogram.values_are_equivalent(value.get_value_iterated_to(), 100_000_000) {
@@ -212,7 +212,28 @@ fn test_get_all_values() {
 	
 	assert_eq!(index, raw_histogram.get_counts_array_length());
 	
+	let mut all_values: Vec<HistogramIterationValue> = Vec::new();
+	index = 0;
 	
+	histogram.put_all_values(&mut all_values);
+	let mut total_added_counts = 0;
+	
+	for value in all_values {
+		if index == 1000 {
+			assert_eq!(10000, value.get_count_added_in_this_iteration_step());
+		}
+		
+		assert_eq!(value.get_count_at_value_iterated_to(), value.get_count_added_in_this_iteration_step());
+		total_added_counts += value.get_count_added_in_this_iteration_step();
+		
+		let value_from_index = histogram.value_from_index(index);
+		assert!(histogram.values_are_equivalent(value_from_index, value.get_value_iterated_to()));
+		
+		index += 1;
+	}
+	
+	assert_eq!(index, histogram.get_counts_array_length());
+	assert_eq!(20_000, total_added_counts);
 }
 
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {
