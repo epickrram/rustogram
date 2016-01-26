@@ -133,7 +133,7 @@ impl Histogram {
     pub fn get_max_value(&self) -> i64 {
         self.max_value
     }
-
+    
     pub fn get_mean(&self) -> f64 {
         if self.total_count == 0 {
             return 0f64;
