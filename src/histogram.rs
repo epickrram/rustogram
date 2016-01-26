@@ -282,7 +282,16 @@ impl Histogram {
         f(None)
     }
 
+	pub fn collect_recorded_values(&self, container: &mut Vec<HistogramIterationValue>) {
+    	let mut iter = new_iterator(self);
+        iter.reset(self.total_count, self.unit_magnitude);
 
+        while iter.has_next() {
+            let mut value = HistogramIterationValue::new();
+            iter.next().copy_to(&mut value);
+            container.push(value);
+        }
+    }
 
     pub fn get_all_values<F, T>(&self, f: F, t: &mut T)
         where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>)
@@ -297,7 +306,7 @@ impl Histogram {
         f(None)
     }
 
-    pub fn put_all_values(&self, container: &mut Vec<HistogramIterationValue>) {
+    pub fn collect_all_values(&self, container: &mut Vec<HistogramIterationValue>) {
         let mut iter = new_all_values_iterator(self);
         iter.reset(self.total_count, self.unit_magnitude);
 

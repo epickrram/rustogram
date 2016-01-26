@@ -140,43 +140,39 @@ fn test_get_recorded_values() {
 	let histogram = get_histogram();
 	let raw_histogram = get_raw_histogram();
 	
-	let mut counter = AssertionCounter { count: 0 };
-	
-	let raw_histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
-		if record.is_some() {
-			let index_and_value = record.unwrap();
-			let (index, value, counter) = index_and_value;
-			if index == 0 {
-				assert_eq!(10_000, value.get_count_added_in_this_iteration_step());
-				counter.increment();
-			} else {
-				assert_eq!(1, value.get_count_added_in_this_iteration_step());
-				counter.increment();
-			}
+	let mut raw_values: Vec<HistogramIterationValue> = Vec::new();
+	raw_histogram.collect_recorded_values(&mut raw_values);
+	let mut index = 0;
+	for value in raw_values {
+		if index == 0 {
+			assert_eq!(10_000, value.get_count_added_in_this_iteration_step());
+		} else {
+			assert_eq!(1, value.get_count_added_in_this_iteration_step());
 		}
-	};
-	raw_histogram.get_recorded_values(raw_histogram_asserter, &mut counter);
+		index += 1;
+	}
 	
-	assert_eq!(2, counter.count);
+	assert_eq!(2, index);
+
+	let mut values: Vec<HistogramIterationValue> = Vec::new();
+	index = 0;
 	
-	counter.reset();
+	histogram.collect_recorded_values(&mut values);
+	let mut total_added_counts = 0;
 	
-	let histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
-		if record.is_some() {
-			let index_and_value = record.unwrap();
-			let (index, value, counter) = index_and_value;
-			if index == 0 {
-				assert_eq!(10_000, value.get_count_added_in_this_iteration_step());
-			}
-				
-			assert!(value.get_count_at_value_iterated_to() != 0);
-			assert_eq!(value.get_count_at_value_iterated_to(), value.get_count_added_in_this_iteration_step());
-			counter.increment_by(value.get_count_added_in_this_iteration_step());
+	for value in values {
+		if index == 0 {
+			assert_eq!(10_000, value.get_count_added_in_this_iteration_step());
 		}
-	};
-	histogram.get_recorded_values(histogram_asserter, &mut counter);
+			
+		assert!(value.get_count_at_value_iterated_to() != 0);
+		assert_eq!(value.get_count_at_value_iterated_to(), value.get_count_added_in_this_iteration_step());
+		total_added_counts += value.get_count_added_in_this_iteration_step();
+		
+		index += 1;
+	}
 	
-	assert_eq!(20_000, counter.count);
+	assert_eq!(20_000, total_added_counts);
 }
 
 #[test]
@@ -185,7 +181,7 @@ fn test_get_all_values() {
 	let raw_histogram = get_raw_histogram();
 	
 	let mut all_raw_values: Vec<HistogramIterationValue> = Vec::new();
-	raw_histogram.put_all_values(&mut all_raw_values); 
+	raw_histogram.collect_all_values(&mut all_raw_values); 
 	
 	let mut index = 0;
 	let mut total_count_to_this_point = 0;
@@ -215,7 +211,7 @@ fn test_get_all_values() {
 	let mut all_values: Vec<HistogramIterationValue> = Vec::new();
 	index = 0;
 	
-	histogram.put_all_values(&mut all_values);
+	histogram.collect_all_values(&mut all_values);
 	let mut total_added_counts = 0;
 	
 	for value in all_values {
