@@ -117,21 +117,51 @@ fn test_get_count_at_value() {
     assert_eq!(10000, histogram.get_count_at_value(1000));
 }
 
-struct AssertionCounter {
-	count: i64
+#[test]
+fn test_collect_method_returns_same_as_callback_method_for_recorded_values() {
+	let mut value_recorder = ValueRecorder { elements: Vec::new() };
+	let histogram = get_histogram();
+	let histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut ValueRecorder)>| {
+		if record.is_some() {
+			let index_and_value = record.unwrap();
+			let (_, value, counter) = index_and_value;
+			counter.add_element(value);
+		}
+	};
+	histogram.get_recorded_values(histogram_asserter, &mut value_recorder);
+	
+	let mut collected = Vec::new();
+	histogram.collect_recorded_values(&mut collected);
+	
+	assert_eq!(collected.len(), value_recorder.elements.len());
+	let mut index = 0;
+	for collected_value in collected {
+		assert!(collected_value == value_recorder.elements[index]);
+		index += 1;
+	}
 }
 
-impl AssertionCounter {
-	fn increment(&mut self) {
-		self.count += 1;
-	}
+#[test]
+fn test_collect_method_returns_same_as_callback_method_for_all_values() {
+	let mut value_recorder = ValueRecorder { elements: Vec::new() };
+	let histogram = get_histogram();
+	let histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut ValueRecorder)>| {
+		if record.is_some() {
+			let index_and_value = record.unwrap();
+			let (_, value, counter) = index_and_value;
+			counter.add_element(value);
+		}
+	};
+	histogram.get_all_values(histogram_asserter, &mut value_recorder);
 	
-	fn increment_by(&mut self, increment: i64) {
-		self.count += increment;
-	}
+	let mut collected = Vec::new();
+	histogram.collect_all_values(&mut collected);
 	
-	fn reset(&mut self) {
-		self.count = 0;
+	assert_eq!(collected.len(), value_recorder.elements.len());
+	let mut index = 0;
+	for collected_value in collected {
+		assert!(collected_value == value_recorder.elements[index]);
+		index += 1;
 	}
 }
 
@@ -260,4 +290,16 @@ fn get_raw_histogram() -> Histogram {
     }
     h.record_value(100_000_000);
     h
+}
+
+struct ValueRecorder {
+	elements: Vec<HistogramIterationValue>
+}
+
+impl ValueRecorder {
+	fn add_element(&mut self, value: &HistogramIterationValue) {
+		let mut copy = HistogramIterationValue::new();
+		value.copy_to(&mut copy);
+		self.elements.push(copy);
+	}
 }

@@ -1,6 +1,7 @@
 use std::fmt;
 use histogram::*;
 
+#[derive(PartialEq)]
 pub struct HistogramIterationValue {
     value_iterated_to: i64,
     value_iterated_from: i64,
