@@ -133,7 +133,7 @@ impl Histogram {
     pub fn get_max_value(&self) -> i64 {
         self.max_value
     }
-    
+
     pub fn get_mean(&self) -> f64 {
         if self.total_count == 0 {
             return 0f64;
@@ -268,40 +268,44 @@ impl Histogram {
     pub fn get_total_count(&self) -> i64 {
         self.total_count
     }
-    
-    pub fn get_recorded_values<F, T>(&self, f: F, t: &mut T) where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>) {
-    	let mut iter = new_iterator(self);
-    	iter.reset(self.total_count, self.unit_magnitude);
-    	let mut index = 0;
-    	while iter.has_next() {
-    		f(Some((index, iter.next(), t)));
-    		index += 1;
-    	}
-    	f(None)
+
+    pub fn get_recorded_values<F, T>(&self, f: F, t: &mut T)
+        where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>)
+    {
+        let mut iter = new_iterator(self);
+        iter.reset(self.total_count, self.unit_magnitude);
+        let mut index = 0;
+        while iter.has_next() {
+            f(Some((index, iter.next(), t)));
+            index += 1;
+        }
+        f(None)
     }
-    
-    
-    
-    pub fn get_all_values<F, T>(&self, f: F, t: &mut T) where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>) {
-    	let mut iter = new_all_values_iterator(self);
-    	iter.reset(self.total_count, self.unit_magnitude);
-    	let mut index = 0;
-    	while iter.has_next() {
-    		f(Some((index, iter.next(), t)));
-    		index += 1;
-    	}
-    	f(None)
+
+
+
+    pub fn get_all_values<F, T>(&self, f: F, t: &mut T)
+        where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>)
+    {
+        let mut iter = new_all_values_iterator(self);
+        iter.reset(self.total_count, self.unit_magnitude);
+        let mut index = 0;
+        while iter.has_next() {
+            f(Some((index, iter.next(), t)));
+            index += 1;
+        }
+        f(None)
     }
-    
+
     pub fn put_all_values(&self, container: &mut Vec<HistogramIterationValue>) {
-    	let mut iter = new_all_values_iterator(self);
-    	iter.reset(self.total_count, self.unit_magnitude);
-    	
-    	while iter.has_next() {
-    		let mut value = HistogramIterationValue::new();
-    		iter.next().copy_to(&mut value);
-    		container.push(value);
-    	}
+        let mut iter = new_all_values_iterator(self);
+        iter.reset(self.total_count, self.unit_magnitude);
+
+        while iter.has_next() {
+            let mut value = HistogramIterationValue::new();
+            iter.next().copy_to(&mut value);
+            container.push(value);
+        }
     }
 
     fn increment_total_count(&mut self) {

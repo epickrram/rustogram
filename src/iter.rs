@@ -27,14 +27,14 @@ impl HistogramIterationValue {
     }
 
     fn set(&mut self,
-               _value_iterated_to: i64,
-               _value_iterated_from: i64,
-               _count_at_value_iterated_to: i64,
-               _count_added_in_this_iteration_step: i64,
-               _total_count_to_this_value: i64,
-               _total_value_to_this_value: i64,
-               _percentile: f64,
-               _percentile_level_iterated_to: f64) {
+           _value_iterated_to: i64,
+           _value_iterated_from: i64,
+           _count_at_value_iterated_to: i64,
+           _count_added_in_this_iteration_step: i64,
+           _total_count_to_this_value: i64,
+           _total_value_to_this_value: i64,
+           _percentile: f64,
+           _percentile_level_iterated_to: f64) {
         self.value_iterated_to = _value_iterated_to;
         self.value_iterated_from = _value_iterated_from;
         self.count_at_value_iterated_to = _count_at_value_iterated_to;
@@ -55,9 +55,9 @@ impl HistogramIterationValue {
         self.percentile = 0.0;
         self.percentile_level_iterated_to = 0.0;
     }
-    
+
     pub fn copy_to(&self, target: &mut HistogramIterationValue) {
-    	target.value_iterated_to = self.value_iterated_to;
+        target.value_iterated_to = self.value_iterated_to;
         target.value_iterated_from = self.value_iterated_from;
         target.count_at_value_iterated_to = self.count_at_value_iterated_to;
         target.count_added_in_this_iteration_step = self.count_added_in_this_iteration_step;
@@ -78,13 +78,13 @@ impl HistogramIterationValue {
     pub fn get_count_added_in_this_iteration_step(&self) -> i64 {
         self.count_added_in_this_iteration_step
     }
-    
+
     pub fn get_total_value_to_this_value(&self) -> i64 {
-    	self.total_value_to_this_value
+        self.total_value_to_this_value
     }
-    
+
     pub fn get_total_count_to_this_value(&self) -> i64 {
-    	self.total_count_to_this_value
+        self.total_count_to_this_value
     }
 }
 
@@ -130,9 +130,9 @@ impl<'a> AllValuesIterator<'a> {
         self.reset_iterator(total_count, unit_magnitude);
     }
 
-	// diff
+    // diff
     pub fn has_next(&mut self) -> bool {
-    	self.current_index < (self.histogram.get_counts_array_length() - 1)
+        self.current_index < (self.histogram.get_counts_array_length() - 1)
     }
 
     pub fn next(&mut self) -> &HistogramIterationValue {
@@ -191,7 +191,7 @@ impl<'a> AllValuesIterator<'a> {
         (100.0f64 * self.total_count_to_current_index as f64) / self.array_total_count as f64
     }
 
-	// diff
+    // diff
     fn reached_iteration_level(&mut self) -> bool {
         (self.visited_index != self.current_index)
     }
