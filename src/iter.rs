@@ -78,6 +78,14 @@ impl HistogramIterationValue {
     pub fn get_count_added_in_this_iteration_step(&self) -> i64 {
         self.count_added_in_this_iteration_step
     }
+    
+    pub fn get_total_value_to_this_value(&self) -> i64 {
+    	self.total_value_to_this_value
+    }
+    
+    pub fn get_total_count_to_this_value(&self) -> i64 {
+    	self.total_count_to_this_value
+    }
 }
 
 

@@ -186,42 +186,32 @@ fn test_get_all_values() {
 	
 	let mut all_values: Vec<HistogramIterationValue> = Vec::new();
 	raw_histogram.put_all_values(&mut all_values); 
+	
 	let mut index = 0;
+	let mut total_count_to_this_point = 0;
+	let mut total_value_to_this_point = 0;
+	
 	for value in all_values {
 		if index == 1000 {
-				assert_eq!(10000, value.get_count_added_in_this_iteration_step());
-			} else if histogram.values_are_equivalent(value.get_value_iterated_to(), 100_000_000) {
-				assert_eq!(1, value.get_count_added_in_this_iteration_step());
-			} else {
-				assert_eq!(0, value.get_count_added_in_this_iteration_step());
-			}
+			assert_eq!(10000, value.get_count_added_in_this_iteration_step());
+		} else if histogram.values_are_equivalent(value.get_value_iterated_to(), 100_000_000) {
+			assert_eq!(1, value.get_count_added_in_this_iteration_step());
+		} else {
+			assert_eq!(0, value.get_count_added_in_this_iteration_step());
+		}
+		
+		let latest_value_at_index = value.get_value_iterated_to();
+		total_count_to_this_point += value.get_count_at_value_iterated_to();
+		assert_eq!(total_count_to_this_point, value.get_total_count_to_this_value());
+		
+		total_value_to_this_point += value.get_count_at_value_iterated_to() * latest_value_at_index;
+		assert_eq!(total_value_to_this_point, value.get_total_value_to_this_value()); 	
+			
 		index += 1;
 	}
 	
 	assert_eq!(index, raw_histogram.get_counts_array_length());
 	
-//	
-//	let raw_histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
-//		if record.is_some() {
-//			let index_and_value = record.unwrap();
-//			let (index, value, counter) = index_and_value;
-//			
-//			if index == 1000 {
-//				assert_eq!(10000, value.get_count_added_in_this_iteration_step());
-//				counter.increment();
-//			} else if histogram.values_are_equivalent(value.get_value_iterated_to(), 100_000_000) {
-//				assert_eq!(1, value.get_count_added_in_this_iteration_step());
-//				counter.increment();
-//			} else {
-//				assert_eq!(0, value.get_count_added_in_this_iteration_step());
-//			}
-//			
-//			
-//		}
-//	};
-//	raw_histogram.get_all_values(raw_histogram_asserter, &mut counter);
-//	
-//	assert_eq!(2, counter.count);
 	
 }
 
