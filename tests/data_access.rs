@@ -138,7 +138,7 @@ impl AssertionCounter {
 #[test]
 fn test_get_recorded_values() {
 	let histogram = get_histogram();
-	let raw_histogram : Histogram = get_raw_histogram();
+	let raw_histogram = get_raw_histogram();
 	
 	let mut counter = AssertionCounter { count: 0 };
 	
@@ -177,6 +177,37 @@ fn test_get_recorded_values() {
 	histogram.get_recorded_values(histogram_asserter, &mut counter);
 	
 	assert_eq!(20_000, counter.count);
+}
+
+#[test]
+fn test_get_all_values() {
+	let histogram = get_histogram();
+	let raw_histogram = get_raw_histogram();
+	
+	let mut counter = AssertionCounter { count: 0 };
+	
+	let raw_histogram_asserter = |record: Option<(i64, &HistogramIterationValue, &mut AssertionCounter)>| {
+		if record.is_some() {
+			let index_and_value = record.unwrap();
+			let (index, value, counter) = index_and_value;
+			
+			if index == 1000 {
+				assert_eq!(10000, value.get_count_added_in_this_iteration_step());
+				counter.increment();
+			} else if histogram.values_are_equivalent(value.get_value_iterated_to(), 100_000_000) {
+				assert_eq!(1, value.get_count_added_in_this_iteration_step());
+				counter.increment();
+			} else {
+				assert_eq!(0, value.get_count_added_in_this_iteration_step());
+			}
+			
+			
+		}
+	};
+	raw_histogram.get_all_values(raw_histogram_asserter, &mut counter);
+	
+	assert_eq!(2, counter.count);
+	
 }
 
 fn assert_float_eq(expected: f64, actual: f64, delta: f64) {

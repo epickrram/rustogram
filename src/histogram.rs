@@ -279,6 +279,17 @@ impl Histogram {
     	}
     	f(None)
     }
+    
+    pub fn get_all_values<F, T>(&self, f: F, t: &mut T) where F: Fn(Option<(i64, &HistogramIterationValue, &mut T)>) {
+    	let mut iter = new_all_values_iterator(self);
+    	iter.reset(self.total_count, self.unit_magnitude);
+    	let mut index = 0;
+    	while iter.has_next() {
+    		f(Some((index, iter.next(), t)));
+    		index += 1;
+    	}
+    	f(None)
+    }
 
     fn increment_total_count(&mut self) {
         self.total_count += 1;
