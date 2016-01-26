@@ -13,7 +13,7 @@ pub struct HistogramIterationValue {
 }
 
 impl HistogramIterationValue {
-    fn new() -> HistogramIterationValue {
+    pub fn new() -> HistogramIterationValue {
         HistogramIterationValue {
             value_iterated_to: 0,
             value_iterated_from: 0,
@@ -54,6 +54,17 @@ impl HistogramIterationValue {
         self.total_value_to_this_value = 0;
         self.percentile = 0.0;
         self.percentile_level_iterated_to = 0.0;
+    }
+    
+    pub fn copy_to(&self, target: &mut HistogramIterationValue) {
+    	target.value_iterated_to = self.value_iterated_to;
+        target.value_iterated_from = self.value_iterated_from;
+        target.count_at_value_iterated_to = self.count_at_value_iterated_to;
+        target.count_added_in_this_iteration_step = self.count_added_in_this_iteration_step;
+        target.total_count_to_this_value = self.total_count_to_this_value;
+        target.total_value_to_this_value = self.total_value_to_this_value;
+        target.percentile = self.percentile;
+        target.percentile_level_iterated_to = self.percentile_level_iterated_to;
     }
 
     pub fn get_value_iterated_to(&self) -> i64 {

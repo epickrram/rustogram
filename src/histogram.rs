@@ -290,6 +290,17 @@ impl Histogram {
     	}
     	f(None)
     }
+    
+    pub fn put_all_values(&self, container: &mut Vec<HistogramIterationValue>) {
+    	let mut iter = new_all_values_iterator(self);
+    	iter.reset(self.total_count, self.unit_magnitude);
+    	
+    	while iter.has_next() {
+    		let mut value = HistogramIterationValue::new();
+    		iter.next().copy_to(&mut value);
+    		container.push(value);
+    	}
+    }
 
     fn increment_total_count(&mut self) {
         self.total_count += 1;
