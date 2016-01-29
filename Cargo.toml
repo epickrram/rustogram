@@ -11,6 +11,6 @@ repository = "https://github.com/epickrram/rustogram"
 
 readme = "README.md"
 
-keywords = ["histogram", "hdr", "dynamic", "range"]
+keywords = ["histogram", "hdr", "dynamic", "range", "hdrhistogram", "statistics", "percentile"]
 
 license = "Apache-2.0"
