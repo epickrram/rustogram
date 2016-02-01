@@ -59,6 +59,11 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
 
 }
 
+pub fn deserialise_histogram(byte_array: &Vec<u8>) -> Option<Histogram> {
+	None
+}
+
+
 pub struct Histogram {
     values: Box<[i64]>,
     total_count: i64,
