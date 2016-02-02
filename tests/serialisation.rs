@@ -7,14 +7,35 @@ use rustogram::histogram::*;
 use rustc_serialize::base64::*;
 
 #[test]
-fn test_zig_zag_encoding() {
+fn test_zig_zag_encoding_for_single_value() {
 	let mut buffer : Vec<u8> = Vec::new();
 	
 	let value: i64 = 982374923847239;
 	encode(value, &mut buffer);
 	
-	let (decoded_value, read) = decode(&buffer, 0);
+	let (decoded_value, bytes_read) = decode(&buffer, 0);
 	assert_eq!(value, decoded_value);
+	assert_eq!(8, bytes_read);
+}
+
+#[test]
+fn test_zig_zag_encoding_for_multiple_values() {
+	let mut buffer : Vec<u8> = Vec::new();
+	
+	let value0: i64 = 47;
+	encode(value0, &mut buffer);
+	
+	let value1: i64 = 23746;
+	encode(value1, &mut buffer);
+	
+	let (decoded_value0, bytes_read0) = decode(&buffer, 0);
+	let (decoded_value1, bytes_read1) = decode(&buffer, bytes_read0);
+	
+	assert_eq!(value0, decoded_value0);
+	assert_eq!(1, bytes_read0);
+	
+	assert_eq!(value1, decoded_value1);
+	assert_eq!(3, bytes_read1);
 }
 
 #[ignore]

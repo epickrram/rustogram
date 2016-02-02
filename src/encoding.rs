@@ -50,30 +50,39 @@ pub fn decode(buffer: &Vec<u8>, input_offset: i32) -> (i64, i32) {
     let offset = input_offset as usize;
     let mut v: u64 = buffer[offset] as u64;
     let mut value: u64 = (v & 0x7F) as u64;
+    let mut consumed_bytes: i32 = 1;
     if (v & 0x80) != 0 {
         v = buffer[offset + 1] as u64;
         value |= ((v & 0x7F) << 7) as u64;
+        consumed_bytes = 2;
         if (v & 0x80) != 0 {
             v = buffer[offset + 2] as u64;
             value |= ((v & 0x7F) << 14) as u64;
+            consumed_bytes = 3;
             if (v & 0x80) != 0 {
                 v = buffer[offset + 3] as u64;
                 value |= ((v & 0x7F) << 21) as u64;
+                consumed_bytes = 4;
                 if (v & 0x80) != 0 {
                     v = buffer[offset + 4] as u64;
                     value |= ((v & 0x7F) << 28) as u64;
+                    consumed_bytes = 5;
                     if (v & 0x80) != 0 {
                         v = buffer[offset + 5] as u64;
                         value |= ((v & 0x7F) << 35) as u64;
+                        consumed_bytes = 6;
                         if (v & 0x80) != 0 {
                             v = buffer[offset + 6] as u64;
                             value |= ((v & 0x7F) << 42) as u64;
+                            consumed_bytes = 7;
                             if (v & 0x80) != 0 {
                                 v = buffer[offset + 7] as u64;
                                 value |= ((v & 0x7F) << 49) as u64;
+                                consumed_bytes = 8;
                                 if (v & 0x80) != 0 {
                                     v = buffer[offset + 8] as u64;
                                     value |= (v << 56) as u64;
+                                    consumed_bytes = 9;
                                 }
                             }
                         }
@@ -83,5 +92,5 @@ pub fn decode(buffer: &Vec<u8>, input_offset: i32) -> (i64, i32) {
         }
     }
     // value = (value >> 1) ^ (-(value & 1));
-    (value as i64, 0)
+    (value as i64, consumed_bytes)
 }
