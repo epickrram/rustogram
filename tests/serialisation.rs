@@ -6,7 +6,6 @@ use rustogram::encoding::*;
 use rustogram::histogram::*;
 use rustc_serialize::base64::*;
 
-#[ignore]
 #[test]
 fn test_zig_zag_encoding() {
 	let mut buffer : Vec<u8> = Vec::new();
