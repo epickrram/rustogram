@@ -2,8 +2,21 @@ extern crate rustogram;
 extern crate rustc_serialize;
 static SERIALISED_FORM: &'static str = "HISTEwAAAAQAAAAAAAAABQAAAAABMS0AAAAAAAX14QA/8AAAAAAAAAAEBQI=";
 
+use rustogram::encoding::*;
 use rustogram::histogram::*;
 use rustc_serialize::base64::*;
+
+#[ignore]
+#[test]
+fn test_zig_zag_encoding() {
+	let mut buffer : Vec<u8> = Vec::new();
+	
+	let value: i64 = 982374923847239;
+	encode(value, &mut buffer);
+	
+	let (decoded_value, read) = decode(&buffer, 0);
+	assert_eq!(value, decoded_value);
+}
 
 #[ignore]
 #[test]

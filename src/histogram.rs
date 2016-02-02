@@ -60,6 +60,53 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
 }
 
 pub fn deserialise_histogram(byte_array: &Vec<u8>) -> Option<Histogram> {
+	
+	/*
+	// 4 bytes (i32) magic cookie (v2 == 0x1c849303 | 0x10)
+	buffer.putInt(getEncodingCookie());
+	// 4 bytes (i32) length of payload
+        buffer.putInt(0); // Placeholder for payload length in bytes.
+        buffer.putInt(getNormalizingIndexOffset());
+        buffer.putInt(numberOfSignificantValueDigits);
+        buffer.putLong(lowestDiscernibleValue);
+        buffer.putLong(highestTrackableValue);
+        buffer.putDouble(getIntegerToDoubleValueConversionRatio());
+
+        int payloadStartPosition = buffer.position();
+        fillBufferFromCountsArray(buffer);
+        buffer.putInt(initialPosition + 4, buffer.position() - payloadStartPosition)
+        
+final int cookie = buffer.getInt();
+        final int payloadLengthInBytes;
+        final int normalizingIndexOffset;
+        final int numberOfSignificantValueDigits;
+        final long lowestTrackableUnitValue;
+        long highestTrackableValue;
+        final Double integerToDoubleValueConversionRatio;
+
+        if ((getCookieBase(cookie) == encodingCookieBase) ||
+                (getCookieBase(cookie) == V1EncodingCookieBase)) {
+            if (getCookieBase(cookie) == V2EncodingCookieBase) {
+                if (getWordSizeInBytesFromCookie(cookie) != V2maxWordSizeInBytes) {
+                    throw new IllegalArgumentException(
+                            "The buffer does not contain a Histogram (no valid cookie found)");
+                }
+            }
+            payloadLengthInBytes = buffer.getInt();
+            normalizingIndexOffset = buffer.getInt();
+            numberOfSignificantValueDigits = buffer.getInt();
+            lowestTrackableUnitValue = buffer.getLong();
+            highestTrackableValue = buffer.getLong();
+            integerToDoubleValueConversionRatio = buffer.getDouble();
+            
+            
+        
+        
+        
+	*/
+	
+	
+	
 	None
 }
 
