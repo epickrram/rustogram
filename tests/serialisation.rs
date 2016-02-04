@@ -38,6 +38,27 @@ fn test_zig_zag_encoding_for_multiple_values() {
 	assert_eq!(3, bytes_read1);
 }
 
+#[test]
+fn test_zig_zag_encoding_for_limits() {
+	let mut buffer : Vec<u8> = Vec::new();
+	
+	let value0: i64 = std::i64::MAX;
+	encode(value0, &mut buffer);
+	
+	let value1: i64 = std::i64::MIN;
+	encode(value1, &mut buffer);
+	
+	let (decoded_value0, bytes_read0) = decode(&buffer, 0);
+	let (decoded_value1, bytes_read1) = decode(&buffer, bytes_read0);
+	
+	assert_eq!(value0, decoded_value0);
+	assert_eq!(9, bytes_read0);
+	
+	assert_eq!(value1, decoded_value1);
+	assert_eq!(9, bytes_read1);
+	
+}
+
 #[ignore]
 #[test]
 fn test_deserialise() {
