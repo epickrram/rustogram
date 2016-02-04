@@ -55,8 +55,18 @@ fn test_zig_zag_encoding_for_limits() {
 	assert_eq!(9, bytes_read0);
 	
 	assert_eq!(value1, decoded_value1);
-	assert_eq!(9, bytes_read1);
-	
+	assert_eq!(9, bytes_read1);	
+}
+
+#[test]
+fn test_i32_encoding_and_decoding() {
+	assert_i32_encoding_and_decoding(9834795);
+}
+
+#[test]
+fn test_i32_encoding_and_decoding_limits() {
+	assert_i32_encoding_and_decoding(std::i32::MAX);
+	assert_i32_encoding_and_decoding(std::i32::MIN);
 }
 
 #[ignore]
@@ -69,7 +79,16 @@ fn test_deserialise() {
 
 	let byte_array = SERIALISED_FORM.from_base64().unwrap();
 	
-	let deserialised_histogram = deserialise_histogram(&byte_array).unwrap();
+	let deserialised_histogram = deserialise_histogram(&byte_array, 0).unwrap();
 	
 	
+}
+
+fn assert_i32_encoding_and_decoding(value: i32) {
+	let mut buffer : Vec<u8> = Vec::new();
+	put_i32(value, &mut buffer);
+	
+	let decoded = get_i32(&buffer, 0);
+	
+	assert_eq!(value, decoded);
 }

@@ -59,7 +59,7 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
 
 }
 
-pub fn deserialise_histogram(byte_array: &Vec<u8>) -> Option<Histogram> {
+pub fn deserialise_histogram(byte_array: &Vec<u8>, offset: usize) -> Option<Histogram> {
 	
 	/*
 	// 4 bytes (i32) magic cookie (v2 == 0x1c849303 | 0x10)

@@ -1,4 +1,19 @@
+pub fn put_i32(input_value: i32, buffer: &mut Vec<u8>) {
+	buffer.push((input_value >> 24) as u8);
+	buffer.push((input_value >> 16) as u8);
+	buffer.push((input_value >> 8) as u8);
+	buffer.push((input_value) as u8);
+}
 
+pub fn get_i32(buffer: &Vec<u8>, offset: i32) -> i32 {
+	let offset = offset as usize;
+	let i0 = (buffer[offset] as i32) << 24;
+	let i1 = (buffer[offset + 1] as i32) << 16;
+	let i2 = (buffer[offset + 2] as i32) << 8;
+	let i3 = (buffer[offset + 3] as i32);
+	
+	i0 | i1 | i2 | i3
+}
 
 pub fn encode(input_value: i64, buffer: &mut Vec<u8>) {
 //    let value = ((input_value << 1) ^ (input_value >> 63)) as u64;
