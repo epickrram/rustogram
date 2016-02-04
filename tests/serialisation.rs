@@ -69,6 +69,17 @@ fn test_i32_encoding_and_decoding_limits() {
 	assert_i32_encoding_and_decoding(std::i32::MIN);
 }
 
+#[test]
+fn test_i64_encoding_and_decoding() {
+	assert_i64_encoding_and_decoding(9834795);
+}
+
+#[test]
+fn test_i64_encoding_and_decoding_limits() {
+	assert_i64_encoding_and_decoding(std::i64::MAX);
+	assert_i64_encoding_and_decoding(std::i64::MIN);
+}
+
 #[ignore]
 #[test]
 fn test_deserialise() {
@@ -82,6 +93,15 @@ fn test_deserialise() {
 	let deserialised_histogram = deserialise_histogram(&byte_array, 0).unwrap();
 	
 	
+}
+
+fn assert_i64_encoding_and_decoding(value: i64) {
+	let mut buffer : Vec<u8> = Vec::new();
+	put_i64(value, &mut buffer);
+	
+	let decoded = get_i64(&buffer, 0);
+	
+	assert_eq!(value, decoded);
 }
 
 fn assert_i32_encoding_and_decoding(value: i32) {
