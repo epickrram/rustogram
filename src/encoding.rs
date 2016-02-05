@@ -5,6 +5,14 @@ pub fn put_i32(input_value: i32, buffer: &mut Vec<u8>) {
 	buffer.push((input_value) as u8);
 }
 
+pub fn put_i32_at_offset(input_value: i32, buffer: &mut Vec<u8>, offset: i32) {
+	let offset = offset as usize;
+	buffer[offset] = (input_value >> 24) as u8;
+	buffer[offset] = (input_value >> 16) as u8;
+	buffer[offset] = (input_value >> 8) as u8;
+	buffer[offset] = input_value as u8;
+}
+
 pub fn get_i32(buffer: &Vec<u8>, offset: i32) -> i32 {
 	let offset = offset as usize;
 	let i0 = (buffer[offset] as i32) << 24;

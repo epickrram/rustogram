@@ -388,6 +388,26 @@ impl Histogram {
         }
     }
     
+    pub fn serialise(&self, target_buffer: &mut Vec<u8>) {
+    	let max_value = self.get_max_value();
+    	
+    	put_i32(0x1c849303i32 | 0x10i32, target_buffer);
+
+    	let index_of_payload_length = target_buffer.len() as i32;
+    	put_i32(0, target_buffer);
+    	// normalising index offset - always 0
+    	put_i32(0, target_buffer);
+    	put_i32(self.number_of_significant_digits, target_buffer);
+    	put_i64(self.lowest_discernible_value, target_buffer);
+    	put_i64(self.highest_trackable_value, target_buffer);
+    	// value conversion ratio - currently unsupported
+    	put_i64(0, target_buffer);
+    	
+    	let counts_payload_length = self.fill_buffer_from_counts_array(target_buffer);
+    	
+    	put_i32_at_offset(counts_payload_length + (3 * I64_BYTES) + (2 * I32_BYTES), target_buffer, index_of_payload_length);
+    }
+    
     fn establish_internal_tracking_values(&mut self, length_to_cover: i32) {
     	self.reset();
     	
@@ -418,6 +438,39 @@ impl Histogram {
     	}
     	
     	self.total_count = observed_total_count;
+    }
+    
+    fn fill_buffer_from_counts_array(&self, target_buffer: &mut Vec<u8>) -> i32 {
+    	let max_value = self.max_value;
+    	let counts_limit = self.counts_array_index(max_value) + 1;
+    	let mut src_index = 0;
+    	let buffer_start_length = target_buffer.len();
+    	
+    	while src_index < counts_limit {
+    		let count = self.get_count_at_index(src_index);
+    		src_index += 1;
+    		
+    		if count < 0 {
+    			panic!("Cannot encode histogram containing negative counts!");
+    		}
+    		
+    		let mut zeroes_count = 0;
+    		if(count == 0) {
+    			zeroes_count = 1;
+    			while src_index < counts_limit && self.get_count_at_index(src_index) == 0 {
+    				zeroes_count += 1;
+    				src_index += 1;
+    			}
+    		}
+    		
+    		if zeroes_count > 1 {
+    			encode(-zeroes_count, target_buffer);
+    		} else {
+    			encode(count, target_buffer);
+    		}
+    		
+    	}
+    	(target_buffer.len() - buffer_start_length) as i32
     }
     
     fn fill_counts_array_from_source_buffer(&mut self, source_buffer: &Vec<u8>, offset: i32, length_in_bytes: i32, word_size_in_bytes: i32) -> i32 {

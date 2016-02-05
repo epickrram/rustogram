@@ -87,12 +87,55 @@ fn test_deserialise() {
     histogram.record_value(100000000);
     histogram.record_value(20000000);
     histogram.record_value(30000000);
+    
+    let mut target_buffer: Vec<u8> = Vec::new();
+    histogram.serialise(&mut target_buffer);
+    
+    
+    println!("serialised");
+    print_byte_vec(&target_buffer);
 
 	let byte_array = SERIALISED_FORM.from_base64().unwrap();
 	
+	println!("java serialised");
+	print_byte_vec(&byte_array);
+	
 	let deserialised_histogram = deserialise_histogram(&byte_array, 0).unwrap();
 	
-	
+	assert_eq!(histogram.get_total_count(), deserialised_histogram.get_total_count());
+}
+
+fn print_byte_vec(buffer: &Vec<u8>) {
+	for b in buffer {
+		print!("{}{} ", char_for_nibble(b / 16), char_for_nibble(b % 16));
+	}
+	println!("");
+}
+
+fn char_for_nibble(input: u8) -> &'static str {
+	match input {
+		0 => "0",
+		1 => "1",
+		2 => "2",
+		3 => "3",
+		
+		4 => "4",
+		5 => "5",
+		6 => "6",
+		7 => "7",
+		
+		8 => "8",
+		9 => "9",
+		10 => "10",
+		11 => "11",
+		
+		12 => "12",
+		13 => "13",
+		14 => "14",
+		15 => "15",
+		
+		_ => panic!("bad byte value!"),
+	}
 }
 
 fn assert_i64_encoding_and_decoding(value: i64) {
