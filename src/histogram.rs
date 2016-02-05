@@ -75,8 +75,8 @@ pub fn deserialise_histogram(byte_array: &Vec<u8>, offset: i32) -> Option<Histog
 	let placeholder = get_i64(byte_array, offset + (4 * I32_BYTES) + (2 * I64_BYTES));
 	
 	let mut histogram = new_histogram_lower_bound(lowest_trackable_unit_value, highest_trackable_value, number_of_significant_digits);
-	histogram.fill_counts_array_from_source_buffer(byte_array, (4 * I32_BYTES) + (3 * I64_BYTES));
-	histogram.establish_internal_tracking_values();
+	let filled_length = histogram.fill_counts_array_from_source_buffer(byte_array, (4 * I32_BYTES) + (3 * I64_BYTES), payload_length_in_bytes, I64_BYTES);
+	histogram.establish_internal_tracking_values(filled_length);
 	
 	Some(histogram)
 	
@@ -388,12 +388,69 @@ impl Histogram {
         }
     }
     
-    fn establish_internal_tracking_values(&mut self) {
+    fn establish_internal_tracking_values(&mut self, length_to_cover: i32) {
+    	self.reset();
     	
+    	let mut max_index: i32 = -1;
+    	let mut min_non_zero_index: i32 = -1;
+    	let mut observed_total_count: i64 = 0;
+    	
+    	for index in 0..length_to_cover - 1 {
+    		let count_at_index = self.get_count_at_index(index);
+    		if count_at_index > 0 {
+    			observed_total_count += count_at_index;
+    			max_index = index;
+    			if min_non_zero_index == -1 && index != 0 {
+    				min_non_zero_index = index;
+    			}
+    		}
+    	}
+    	
+    	if max_index >= 0 {
+    		let value_from_index = self.value_from_index(max_index);
+    		let max_equivalent_value = self.highest_equivalent_value(value_from_index);
+    		self.max_value = max_equivalent_value;
+    	}
+    	
+    	if min_non_zero_index >= 0 {
+    		let value_from_index = self.value_from_index(min_non_zero_index);
+    		self.min_non_zero_value = value_from_index;
+    	}
+    	
+    	self.total_count = observed_total_count;
     }
     
-    fn fill_counts_array_from_source_buffer(&mut self, source_buffer: &Vec<u8>, offset: i32) {
-    
+    fn fill_counts_array_from_source_buffer(&mut self, source_buffer: &Vec<u8>, offset: i32, length_in_bytes: i32, word_size_in_bytes: i32) -> i32 {
+    	let end_position = offset + length_in_bytes;
+    	let mut offset_within_payload = offset;
+    	let mut dst_index = 0;
+    	while offset_within_payload < end_position {
+    		
+    		let mut zeroes_count: i32 = 0;
+    		
+    		if word_size_in_bytes != I64_BYTES {
+    			panic!("Only 8-byte word size is supported. Is input buffer in v2 format?");
+    		}
+    		let (value, length) = decode(source_buffer, offset_within_payload);
+    		let count = value;
+    		offset_within_payload += length;
+    		if count < 0 {
+    			let zc = -value;
+    			if zc > std::i64::MAX {
+    				panic!("An encoded zero count of > i64::MAX was encountered in the source");
+    			}
+    			
+    			zeroes_count = zc as i32;
+    		}
+    		
+    		if zeroes_count > 0 {
+    			dst_index += zeroes_count;
+    		} else {
+    			self.set_count_at_index(dst_index, count);
+    		}
+    	}
+    	
+    	dst_index
     }
 
     fn increment_total_count(&mut self) {
@@ -410,6 +467,10 @@ impl Histogram {
 
     fn increment_count_at_index(&mut self, counts_index: i32) {
         self.values[counts_index as usize] += 1;
+    }
+    
+    fn set_count_at_index(&mut self, counts_index: i32, value: i64) {
+    	self.values[counts_index as usize] = value;
     }
 
     fn update_min_and_max(&mut self, value: i64) {
