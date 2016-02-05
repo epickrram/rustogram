@@ -2,6 +2,10 @@ use std::cmp;
 use std::fmt;
 use std;
 use iter::*;
+use encoding::*;
+
+const I32_BYTES: i32 = 4;
+const I64_BYTES: i32 = 8;
 
 pub fn new_histogram(_highest_trackable_value: i64,
                      _number_of_significant_digits: i32)
@@ -59,7 +63,24 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
 
 }
 
-pub fn deserialise_histogram(byte_array: &Vec<u8>, offset: usize) -> Option<Histogram> {
+pub fn deserialise_histogram(byte_array: &Vec<u8>, offset: i32) -> Option<Histogram> {
+	
+	let cookie = get_i32(byte_array, offset);
+	let payload_length_in_bytes = get_i32(byte_array, offset + I32_BYTES);
+	// TODO assert that normalising_index_offset is zero - any other value is unsupported
+	let normalising_index_offset = get_i32(byte_array, offset + 2 * I32_BYTES);
+	let number_of_significant_digits = get_i32(byte_array, offset + 3 * I32_BYTES);
+	let lowest_trackable_unit_value = get_i64(byte_array, offset + 4 * I32_BYTES);
+	let highest_trackable_value = get_i64(byte_array, offset + (4 * I32_BYTES) + I64_BYTES);
+	let placeholder = get_i64(byte_array, offset + (4 * I32_BYTES) + (2 * I64_BYTES));
+	
+	let mut histogram = new_histogram_lower_bound(lowest_trackable_unit_value, highest_trackable_value, number_of_significant_digits);
+	histogram.fill_counts_array_from_source_buffer(byte_array, (4 * I32_BYTES) + (3 * I64_BYTES));
+	histogram.establish_internal_tracking_values();
+	
+	Some(histogram)
+	
+	// NB - do not support integer to double value conversion ratio.
 	
 	/*
 	// 4 bytes (i32) magic cookie (v2 == 0x1c849303 | 0x10)
@@ -106,8 +127,6 @@ final int cookie = buffer.getInt();
 	*/
 	
 	
-	
-	None
 }
 
 
@@ -367,6 +386,14 @@ impl Histogram {
             iter.next().copy_to(&mut value);
             container.push(value);
         }
+    }
+    
+    fn establish_internal_tracking_values(&mut self) {
+    	
+    }
+    
+    fn fill_counts_array_from_source_buffer(&mut self, source_buffer: &Vec<u8>, offset: i32) {
+    
     }
 
     fn increment_total_count(&mut self) {
