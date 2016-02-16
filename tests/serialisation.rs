@@ -39,6 +39,17 @@ fn test_zig_zag_encoding_for_multiple_values() {
 }
 
 #[test]
+fn test_sanity() {
+	let a: i64 = -3;
+	let u = a as u64;
+	let c = u as i64;
+	
+	assert_eq!(a, c);
+	
+}
+
+#[ignore]
+#[test]
 fn test_zig_zag_encoding_for_limits() {
 	let mut buffer : Vec<u8> = Vec::new();
 	

@@ -48,38 +48,53 @@ pub fn get_i64(buffer: &Vec<u8>, offset: i32) -> i64 {
 	(i0 | i1 | i2 | i3 | i4 | i5 | i6 | i7) as i64
 }
 
+fn zero_test(input_value: i64, shift: isize) -> bool {
+	let result = sign_preserving_shift(input_value, shift) == 0;
+	println!("{} >> {} == {}", input_value, shift, result);
+	result
+	
+}
+
+fn sign_preserving_shift(input_value: i64, shift: isize) -> i64 {
+	((input_value as u64 & 0b0111111111111111111111111111111111111111111111111111111111111111) >> shift) as i64
+}
+
+fn sign_preserving_shift_unsigned(input_value: u64, shift: isize) -> u64 {
+	((input_value & 0b0111111111111111111111111111111111111111111111111111111111111111) >> shift)
+}
+
 pub fn encode(input_value: i64, buffer: &mut Vec<u8>) {
-//    let value = ((input_value << 1) ^ (input_value >> 63)) as u64;
-    let value = input_value as u64;
-    if value >> 7 == 0 {
+    let value = ((input_value << 1) ^ (input_value >> 63));
+//    let value = input_value as u64;
+    if zero_test(value, 7) {
         buffer.push(value as u8);
     } else {
         buffer.push(((value & 0x7F) | 0x80) as u8);
-        if value >> 14 == 0 {
+        if zero_test(value, 14) {
             buffer.push((value >> 7) as u8);
         } else {
             buffer.push((value >> 7 | 0x80) as u8);
-            if value >> 21 == 0 {
+            if zero_test(value, 21) {
                 buffer.push((value >> 14) as u8);
             } else {
                 buffer.push((value >> 14 | 0x80) as u8);
-                if value >> 28 == 0 {
+                if zero_test(value, 28) {
                     buffer.push((value >> 21) as u8);
                 } else {
                     buffer.push((value >> 21 | 0x80) as u8);
-                    if value >> 35 == 0 {
+                    if zero_test(value, 35) {
                         buffer.push((value >> 28) as u8);
                     } else {
                         buffer.push((value >> 28 | 0x80) as u8);
-                        if value >> 42 == 0 {
+                        if zero_test(value, 42) {
                             buffer.push((value >> 35) as u8);
                         } else {
                             buffer.push((value >> 35 | 0x80) as u8);
-                            if value >> 49 == 0 {
+                            if zero_test(value, 49) {
                                 buffer.push((value >> 42) as u8);
                             } else {
                                 buffer.push((value >> 42 | 0x80) as u8);
-                                if value >> 56 == 0 {
+                                if zero_test(value, 56) {
                                     buffer.push((value >> 49) as u8);
                                 } else {
                                     buffer.push((value >> 49 | 0x80) as u8);
@@ -139,6 +154,7 @@ pub fn decode(buffer: &Vec<u8>, input_offset: i32) -> (i64, i32) {
             }
         }
     }
-    // value = (value >> 1) ^ (-(value & 1));
-    (value as i64, consumed_bytes)
+    let mut signed_val = value as i64;
+    signed_val = sign_preserving_shift(signed_val, 1) ^ (-(signed_val & 1));
+    (signed_val, consumed_bytes)
 }
