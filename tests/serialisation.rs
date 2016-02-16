@@ -63,9 +63,8 @@ fn test_zig_zag_encoding_for_limits() {
 	let (decoded_value0, bytes_read0) = decode(&buffer, 0);
 	let (decoded_value1, bytes_read1) = decode(&buffer, bytes_read0);
 	
-	assert_eq!(9, bytes_read0);
 	assert_eq!(value0, decoded_value0);
-	
+	assert_eq!(9, bytes_read0);
 	
 	assert_eq!(value1, decoded_value1);
 	assert_eq!(9, bytes_read1);	
