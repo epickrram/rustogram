@@ -25,7 +25,7 @@ fn test_zig_zag_encoding_for_multiple_values() {
 	let value0: i64 = 47;
 	encode(value0, &mut buffer);
 	
-	let value1: i64 = 23746;
+	let value1: i64 = -23746;
 	encode(value1, &mut buffer);
 	
 	let (decoded_value0, bytes_read0) = decode(&buffer, 0);
