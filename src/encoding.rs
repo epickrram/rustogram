@@ -50,22 +50,15 @@ pub fn get_i64(buffer: &Vec<u8>, offset: i32) -> i64 {
 
 fn zero_test(input_value: i64, shift: isize) -> bool {
 	let result = sign_preserving_shift(input_value, shift) == 0;
-	println!("{} >> {} == {}", input_value, shift, result);
 	result
-	
 }
 
 fn sign_preserving_shift(input_value: i64, shift: isize) -> i64 {
-	((input_value as u64 & 0b0111111111111111111111111111111111111111111111111111111111111111) >> shift) as i64
-}
-
-fn sign_preserving_shift_unsigned(input_value: u64, shift: isize) -> u64 {
-	((input_value & 0b0111111111111111111111111111111111111111111111111111111111111111) >> shift)
+	((input_value as u64) >> shift) as i64
 }
 
 pub fn encode(input_value: i64, buffer: &mut Vec<u8>) {
     let value = ((input_value << 1) ^ (input_value >> 63));
-//    let value = input_value as u64;
     if zero_test(value, 7) {
         buffer.push(value as u8);
     } else {
@@ -111,40 +104,40 @@ pub fn encode(input_value: i64, buffer: &mut Vec<u8>) {
 
 pub fn decode(buffer: &Vec<u8>, input_offset: i32) -> (i64, i32) {
     let offset = input_offset as usize;
-    let mut v: u64 = buffer[offset] as u64;
-    let mut value: u64 = (v & 0x7F) as u64;
+    let mut v: i64 = buffer[offset] as i64;
+    let mut value: i64 = (v & 0x7F) as i64;
     let mut consumed_bytes: i32 = 1;
     if (v & 0x80) != 0 {
-        v = buffer[offset + 1] as u64;
-        value |= ((v & 0x7F) << 7) as u64;
+        v = buffer[offset + 1] as i64;
+        value |= ((v & 0x7F) << 7) as i64;
         consumed_bytes = 2;
         if (v & 0x80) != 0 {
-            v = buffer[offset + 2] as u64;
-            value |= ((v & 0x7F) << 14) as u64;
+            v = buffer[offset + 2] as i64;
+            value |= ((v & 0x7F) << 14) as i64;
             consumed_bytes = 3;
             if (v & 0x80) != 0 {
-                v = buffer[offset + 3] as u64;
-                value |= ((v & 0x7F) << 21) as u64;
+                v = buffer[offset + 3] as i64;
+                value |= ((v & 0x7F) << 21) as i64;
                 consumed_bytes = 4;
                 if (v & 0x80) != 0 {
-                    v = buffer[offset + 4] as u64;
-                    value |= ((v & 0x7F) << 28) as u64;
+                    v = buffer[offset + 4] as i64;
+                    value |= ((v & 0x7F) << 28) as i64;
                     consumed_bytes = 5;
                     if (v & 0x80) != 0 {
-                        v = buffer[offset + 5] as u64;
-                        value |= ((v & 0x7F) << 35) as u64;
+                        v = buffer[offset + 5] as i64;
+                        value |= ((v & 0x7F) << 35) as i64;
                         consumed_bytes = 6;
                         if (v & 0x80) != 0 {
-                            v = buffer[offset + 6] as u64;
-                            value |= ((v & 0x7F) << 42) as u64;
+                            v = buffer[offset + 6] as i64;
+                            value |= ((v & 0x7F) << 42) as i64;
                             consumed_bytes = 7;
                             if (v & 0x80) != 0 {
-                                v = buffer[offset + 7] as u64;
-                                value |= ((v & 0x7F) << 49) as u64;
+                                v = buffer[offset + 7] as i64;
+                                value |= ((v & 0x7F) << 49) as i64;
                                 consumed_bytes = 8;
                                 if (v & 0x80) != 0 {
-                                    v = buffer[offset + 8] as u64;
-                                    value |= (v << 56) as u64;
+                                    v = buffer[offset + 8] as i64;
+                                    value |= (v << 56) as i64;
                                     consumed_bytes = 9;
                                 }
                             }
@@ -154,7 +147,8 @@ pub fn decode(buffer: &Vec<u8>, input_offset: i32) -> (i64, i32) {
             }
         }
     }
-    let mut signed_val = value as i64;
-    signed_val = sign_preserving_shift(signed_val, 1) ^ (-(signed_val & 1));
-    (signed_val, consumed_bytes)
+    
+    value = sign_preserving_shift(value, 1) ^ (-(value & 1));
+    (value, consumed_bytes)
 }
+

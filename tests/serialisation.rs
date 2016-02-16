@@ -48,7 +48,6 @@ fn test_sanity() {
 	
 }
 
-#[ignore]
 #[test]
 fn test_zig_zag_encoding_for_limits() {
 	let mut buffer : Vec<u8> = Vec::new();
@@ -59,11 +58,14 @@ fn test_zig_zag_encoding_for_limits() {
 	let value1: i64 = std::i64::MIN;
 	encode(value1, &mut buffer);
 	
+	print_byte_vec(&buffer);
+	
 	let (decoded_value0, bytes_read0) = decode(&buffer, 0);
 	let (decoded_value1, bytes_read1) = decode(&buffer, bytes_read0);
 	
-	assert_eq!(value0, decoded_value0);
 	assert_eq!(9, bytes_read0);
+	assert_eq!(value0, decoded_value0);
+	
 	
 	assert_eq!(value1, decoded_value1);
 	assert_eq!(9, bytes_read1);	
@@ -137,13 +139,13 @@ fn char_for_nibble(input: u8) -> &'static str {
 		
 		8 => "8",
 		9 => "9",
-		10 => "10",
-		11 => "11",
+		10 => "a",
+		11 => "b",
 		
-		12 => "12",
-		13 => "13",
-		14 => "14",
-		15 => "15",
+		12 => "c",
+		13 => "d",
+		14 => "e",
+		15 => "f",
 		
 		_ => panic!("bad byte value!"),
 	}
