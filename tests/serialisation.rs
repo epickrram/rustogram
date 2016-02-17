@@ -92,7 +92,6 @@ fn test_i64_encoding_and_decoding_limits() {
 	assert_i64_encoding_and_decoding(std::i64::MIN);
 }
 
-#[ignore]
 #[test]
 fn test_deserialise() {
     let mut histogram = new_histogram_lower_bound(20000000, 100000000, 5);

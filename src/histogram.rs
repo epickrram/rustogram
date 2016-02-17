@@ -405,18 +405,20 @@ impl Histogram {
     	
     	let counts_payload_length = self.fill_buffer_from_counts_array(target_buffer);
     	
-    	put_i32_at_offset(counts_payload_length + (3 * I64_BYTES) + (2 * I32_BYTES), target_buffer, index_of_payload_length);
+    	println!("index of payload length: {}", index_of_payload_length);
+    	println!("payload_length: {}", counts_payload_length);
+    	
+    	put_i32_at_offset(counts_payload_length, target_buffer, index_of_payload_length);
     }
     
     fn establish_internal_tracking_values(&mut self, length_to_cover: i32) {
-    	self.reset();
-    	
     	let mut max_index: i32 = -1;
     	let mut min_non_zero_index: i32 = -1;
     	let mut observed_total_count: i64 = 0;
     	
-    	for index in 0..length_to_cover - 1 {
+    	for index in 0..length_to_cover {
     		let count_at_index = self.get_count_at_index(index);
+            println!("count_at_index[{}] = {}", index, count_at_index);
     		if count_at_index > 0 {
     			observed_total_count += count_at_index;
     			max_index = index;
@@ -485,6 +487,7 @@ impl Histogram {
     			panic!("Only 8-byte word size is supported. Is input buffer in v2 format?");
     		}
     		let (value, length) = decode(source_buffer, offset_within_payload);
+            println!("Decoded value {} of length {} from source buffer", value, length);
     		let count = value;
     		offset_within_payload += length;
     		if count < 0 {
@@ -498,8 +501,11 @@ impl Histogram {
     		
     		if zeroes_count > 0 {
     			dst_index += zeroes_count;
+                println!("Advanced dst_index to {} due to {} zeroes", dst_index, zeroes_count);
     		} else {
+                println!("Setting count to {} at index {}", count, dst_index);
     			self.set_count_at_index(dst_index, count);
+                dst_index += 1;
     		}
     	}
     	
