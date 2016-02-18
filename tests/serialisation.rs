@@ -114,6 +114,10 @@ fn test_deserialise() {
 	let deserialised_histogram = deserialise_histogram(&byte_array, 0).unwrap();
 	
 	assert_eq!(histogram.get_total_count(), deserialised_histogram.get_total_count());
+	assert!(histogram.values_are_equivalent(20000000, histogram.get_value_at_percentile(50.0)));
+    assert!(histogram.values_are_equivalent(30000000, histogram.get_value_at_percentile(83.33)));
+    assert!(histogram.values_are_equivalent(100000000, histogram.get_value_at_percentile(83.34)));
+    assert!(histogram.values_are_equivalent(100000000, histogram.get_value_at_percentile(99.0)));
 }
 
 fn print_byte_vec(buffer: &Vec<u8>) {

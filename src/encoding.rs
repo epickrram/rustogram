@@ -18,7 +18,7 @@ pub fn get_i32(buffer: &Vec<u8>, offset: i32) -> i32 {
 	let i0 = (buffer[offset] as i32) << 24;
 	let i1 = (buffer[offset + 1] as i32) << 16;
 	let i2 = (buffer[offset + 2] as i32) << 8;
-	let i3 = (buffer[offset + 3] as i32);
+	let i3 = buffer[offset + 3] as i32;
 	
 	i0 | i1 | i2 | i3
 }
@@ -31,7 +31,7 @@ pub fn put_i64(input_value: i64, buffer: &mut Vec<u8>) {
 	buffer.push((input_value >> 24) as u8);
 	buffer.push((input_value >> 16) as u8);
 	buffer.push((input_value >> 8) as u8);
-	buffer.push((input_value) as u8);
+	buffer.push(input_value as u8);
 }
 
 pub fn get_i64(buffer: &Vec<u8>, offset: i32) -> i64 {
@@ -43,7 +43,7 @@ pub fn get_i64(buffer: &Vec<u8>, offset: i32) -> i64 {
 	let i4 = (buffer[offset + 4] as i64) << 24;
 	let i5 = (buffer[offset + 5] as i64) << 16;
 	let i6 = (buffer[offset + 6] as i64) << 8;
-	let i7 = (buffer[offset + 7] as i64);
+	let i7 = buffer[offset + 7] as i64;
 	
 	(i0 | i1 | i2 | i3 | i4 | i5 | i6 | i7) as i64
 }
@@ -58,7 +58,7 @@ fn sign_preserving_shift(input_value: i64, shift: isize) -> i64 {
 }
 
 pub fn encode(input_value: i64, buffer: &mut Vec<u8>) {
-    let value = ((input_value << 1) ^ (input_value >> 63));
+    let value = (input_value << 1) ^ (input_value >> 63);
     if zero_test(value, 7) {
         buffer.push(value as u8);
     } else {

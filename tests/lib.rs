@@ -41,7 +41,6 @@ fn test_construction_with_large_numbers() {
     let mut histogram = new_histogram_lower_bound(20000000, 100000000, 5);
 
     histogram.record_value(100000000);
-    println!("recorded value 1");
     histogram.record_value(20000000);
     histogram.record_value(30000000);
 

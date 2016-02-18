@@ -64,69 +64,23 @@ pub fn new_histogram_lower_bound(_lowest_discernible_value: i64,
 }
 
 pub fn deserialise_histogram(byte_array: &Vec<u8>, offset: i32) -> Option<Histogram> {
-	
 	let cookie = get_i32(byte_array, offset);
+	if cookie != (0x1c849303i32 | 0x10i32) {
+		return None;
+	}
 	let payload_length_in_bytes = get_i32(byte_array, offset + I32_BYTES);
 	// TODO assert that normalising_index_offset is zero - any other value is unsupported
-	let normalising_index_offset = get_i32(byte_array, offset + 2 * I32_BYTES);
+//	let normalising_index_offset = get_i32(byte_array, offset + 2 * I32_BYTES);
 	let number_of_significant_digits = get_i32(byte_array, offset + 3 * I32_BYTES);
 	let lowest_trackable_unit_value = get_i64(byte_array, offset + 4 * I32_BYTES);
 	let highest_trackable_value = get_i64(byte_array, offset + (4 * I32_BYTES) + I64_BYTES);
-	let placeholder = get_i64(byte_array, offset + (4 * I32_BYTES) + (2 * I64_BYTES));
+//	let placeholder = get_i64(byte_array, offset + (4 * I32_BYTES) + (2 * I64_BYTES));
 	
 	let mut histogram = new_histogram_lower_bound(lowest_trackable_unit_value, highest_trackable_value, number_of_significant_digits);
 	let filled_length = histogram.fill_counts_array_from_source_buffer(byte_array, (4 * I32_BYTES) + (3 * I64_BYTES), payload_length_in_bytes, I64_BYTES);
 	histogram.establish_internal_tracking_values(filled_length);
 	
 	Some(histogram)
-	
-	// NB - do not support integer to double value conversion ratio.
-	
-	/*
-	// 4 bytes (i32) magic cookie (v2 == 0x1c849303 | 0x10)
-	buffer.putInt(getEncodingCookie());
-	// 4 bytes (i32) length of payload
-        buffer.putInt(0); // Placeholder for payload length in bytes.
-        buffer.putInt(getNormalizingIndexOffset());
-        buffer.putInt(numberOfSignificantValueDigits);
-        buffer.putLong(lowestDiscernibleValue);
-        buffer.putLong(highestTrackableValue);
-        buffer.putDouble(getIntegerToDoubleValueConversionRatio());
-
-        int payloadStartPosition = buffer.position();
-        fillBufferFromCountsArray(buffer);
-        buffer.putInt(initialPosition + 4, buffer.position() - payloadStartPosition)
-        
-final int cookie = buffer.getInt();
-        final int payloadLengthInBytes;
-        final int normalizingIndexOffset;
-        final int numberOfSignificantValueDigits;
-        final long lowestTrackableUnitValue;
-        long highestTrackableValue;
-        final Double integerToDoubleValueConversionRatio;
-
-        if ((getCookieBase(cookie) == encodingCookieBase) ||
-                (getCookieBase(cookie) == V1EncodingCookieBase)) {
-            if (getCookieBase(cookie) == V2EncodingCookieBase) {
-                if (getWordSizeInBytesFromCookie(cookie) != V2maxWordSizeInBytes) {
-                    throw new IllegalArgumentException(
-                            "The buffer does not contain a Histogram (no valid cookie found)");
-                }
-            }
-            payloadLengthInBytes = buffer.getInt();
-            normalizingIndexOffset = buffer.getInt();
-            numberOfSignificantValueDigits = buffer.getInt();
-            lowestTrackableUnitValue = buffer.getLong();
-            highestTrackableValue = buffer.getLong();
-            integerToDoubleValueConversionRatio = buffer.getDouble();
-            
-            
-        
-        
-        
-	*/
-	
-	
 }
 
 
@@ -389,8 +343,6 @@ impl Histogram {
     }
     
     pub fn serialise(&self, target_buffer: &mut Vec<u8>) {
-    	let max_value = self.get_max_value();
-    	
     	put_i32(0x1c849303i32 | 0x10i32, target_buffer);
 
     	let index_of_payload_length = target_buffer.len() as i32;
@@ -404,9 +356,6 @@ impl Histogram {
     	put_i64(0, target_buffer);
     	
     	let counts_payload_length = self.fill_buffer_from_counts_array(target_buffer);
-    	
-    	println!("index of payload length: {}", index_of_payload_length);
-    	println!("payload_length: {}", counts_payload_length);
     	
     	put_i32_at_offset(counts_payload_length, target_buffer, index_of_payload_length);
     }
@@ -457,7 +406,7 @@ impl Histogram {
     		}
     		
     		let mut zeroes_count = 0;
-    		if(count == 0) {
+    		if count == 0 {
     			zeroes_count = 1;
     			while src_index < counts_limit && self.get_count_at_index(src_index) == 0 {
     				zeroes_count += 1;
