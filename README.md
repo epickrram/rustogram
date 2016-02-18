@@ -5,6 +5,13 @@
 A Rust port of [HdrHistogram](https://github.com/HdrHistogram/HdrHistogram).
 
 
+# features
+
+* Implements the signed 64-bit histogram implementation
+* Binary compatible storage/retrieval of histogram values
+* Serialisation compatible (v2 only, scaling not supported)
+
+
 # usage
 
 	extern crate rustogram;
